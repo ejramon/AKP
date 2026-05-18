@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AKP — Registro de Afiliados</title>
+<style>
+:root{--p:#1A3A6B;--a:#2563EB;--t:#1E293B;--ts:#64748B;--b:#CBD5E1;--f:#F0F4F8;--s:#fff;--ok:#16A34A;--err:#DC2626}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--f);color:var(--t);min-height:100vh}
+header{background:var(--p);padding:14px 24px;display:flex;align-items:center;gap:12px;color:#fff}
+header h1{font-size:1.1rem;font-weight:700}header p{font-size:.75rem;opacity:.7;margin-top:2px}
+.main{max-width:680px;margin:32px auto;padding:0 16px}
+.card{background:var(--s);border:1px solid var(--b);border-radius:14px;padding:24px;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.card-icon{width:48px;height:48px;border-radius:12px;background:var(--p);
+  display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0}
+.card-title{font-size:1rem;font-weight:700;color:var(--p)}
+.card-sub{font-size:.78rem;color:var(--ts);margin-top:2px}
+.btn{background:var(--a);color:#fff;border:none;padding:11px 20px;border-radius:9px;
+  font-size:.88rem;font-weight:700;cursor:pointer;font-family:inherit}
+.btn:hover{opacity:.9}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;
+  align-items:center;justify-content:center;padding:12px}
+.modal-bg.open{display:flex}
+.modal{background:var(--s);border-radius:14px;width:min(600px,100%);max-height:92vh;overflow-y:auto}
+.mhdr{background:var(--p);padding:18px 22px;border-radius:14px 14px 0 0;
+  display:flex;justify-content:space-between;align-items:center;color:#fff}
+.mhdr h2{font-size:.95rem;font-weight:700}
+.mhdr p{font-size:.72rem;opacity:.65;margin-top:2px}
+.x{background:rgba(255,255,255,.15);border:none;color:#fff;width:28px;height:28px;
+  border-radius:6px;cursor:pointer;font-size:.9rem}
+.mbody{padding:20px 22px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.full{grid-column:1/-1}
+.f{display:flex;flex-direction:column;gap:4px}
+.f label{font-size:.68rem;font-weight:600;color:var(--ts);text-transform:uppercase;letter-spacing:.07em}
+.f input,.f select{width:100%;padding:9px 11px;background:var(--f);border:1px solid var(--b);
+  border-radius:8px;font-size:.88rem;color:var(--t);font-family:inherit;outline:none}
+.f input:focus,.f select:focus{border-color:var(--a)}
+.radios{display:flex;gap:14px;margin-top:5px}
+.radios label{display:flex;align-items:center;gap:5px;font-size:.87rem;cursor:pointer}
+.mfoot{display:flex;gap:8px;justify-content:flex-end;padding:14px 22px 20px;border-top:1px solid var(--b)}
+.btn-c{background:none;border:1px solid var(--b);color:var(--ts);padding:9px 16px;
+  border-radius:8px;cursor:pointer;font-family:inherit;font-size:.87rem}
+.btn-c:hover{border-color:var(--err);color:var(--err)}
+.edad-hint{font-size:.74rem;color:var(--ts);background:var(--f);padding:7px 11px;
+  border-radius:7px;border-left:3px solid var(--a);margin-top:12px}
+#toast{position:fixed;bottom:18px;right:18px;z-index:999;display:flex;flex-direction:column;gap:8px}
+.ti{padding:11px 15px;border-radius:9px;font-size:.84rem;font-weight:600;
+  box-shadow:0 4px 14px rgba(0,0,0,.18);max-width:300px}
+.tok{background:#DCFCE7;border:1px solid var(--ok);color:var(--ok)}
+.terr{background:#FEE2E2;border:1px solid var(--err);color:var(--err)}
+@media(max-width:460px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div style="font-size:1.8rem">🥋</div>
+  <div><h1>AKP — Registro de Afiliados</h1><p>Portal de ingreso a la base de datos master</p></div>
+</header>
+
+<main class="main">
+  <div class="card">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div class="card-icon">🏫</div>
+      <div>
+        <div class="card-title">Agregar nuevo afiliado</div>
+        <div class="card-sub">La contraseña inicial será la cédula del deportista</div>
+      </div>
+    </div>
+    <button class="btn" onclick="open_()">➕ Nombre del Dojo</button>
+  </div>
+  <div id="ok-count" style="display:none;margin-top:16px;background:var(--s);border:1px solid var(--b);
+    border-radius:10px;padding:14px 18px;font-size:.88rem;color:var(--ts)">
+    ✅ Registrados en esta sesión: <strong id="cnt">0</strong>
+  </div>
+</main>
+
+<!-- MODAL -->
+<div class="modal-bg" id="mb" onclick="bg(event)">
+  <div class="modal">
+    <div class="mhdr">
+      <div><h2>➕ Nuevo Afiliado</h2><p>Completá todos los campos</p></div>
+      <button class="x" onclick="close_()">✕</button>
+    </div>
+    <div class="mbody">
+      <div class="grid">
+        <div class="f full"><label>Nombre del Dojo / Club</label>
+          <input id="dojo" placeholder="Ej: Dojo Quito Norte"></div>
+        <div class="f"><label>Nombres</label>
+          <input id="nombres" placeholder="Ej: Juan Carlos"></div>
+        <div class="f"><label>Apellidos</label>
+          <input id="apellidos" placeholder="Ej: González Ruiz"></div>
+        <div class="f"><label>Cédula</label>
+          <input id="cedula" inputmode="numeric" maxlength="20" placeholder="Ej: 1712345678"></div>
+        <div class="f"><label>Teléfono</label>
+          <input id="telefono" placeholder="Ej: 0991234567"></div>
+        <div class="f full"><label>Dirección</label>
+          <input id="direccion" placeholder="Ej: Av. 10 de Agosto y Colón"></div>
+        <div class="f full"><label>Correo Electrónico</label>
+          <input id="correo" type="email" placeholder="juan@email.com"></div>
+        <div class="f"><label>Ciudad de Nacimiento</label>
+          <input id="ciudad_nacimiento" placeholder="Ej: Quito"></div>
+        <div class="f"><label>Ciudad de Residencia</label>
+          <input id="ciudad_residencia" placeholder="Ej: Guayaquil"></div>
+        <div class="f"><label>Fecha de Nacimiento</label>
+          <input id="fecha_nacimiento" type="date" oninput="calcEdad()"></div>
+        <div class="f"><label>Fecha de Ingreso</label>
+          <input id="fecha_ingreso" type="date"></div>
+        <div class="f"><label>Categoría</label>
+          <select id="categoria"><option value="">— Seleccioná —</option></select></div>
+        <div class="f"><label>Género</label>
+          <div class="radios">
+            <label><input type="radio" name="gen" value="Hombre"> Hombre</label>
+            <label><input type="radio" name="gen" value="Mujer"> Mujer</label>
+          </div>
+        </div>
+      </div>
+      <div class="edad-hint" id="edad" style="display:none">🎂 Edad: <strong id="ev">—</strong> años (calculada automáticamente)</div>
+    </div>
+    <div class="mfoot">
+      <button class="btn-c" onclick="close_()">Cancelar</button>
+      <button class="btn" id="enviar" onclick="enviar()">✅ Registrar Afiliado</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+let cnt = 0;
+const g = id => document.getElementById(id);
+const v = id => g(id)?.value?.trim() || '';
+
+function toast(msg, tipo, ms=4000){
+  const d=document.createElement('div');
+  d.className=`ti ${tipo}`;d.textContent=msg;
+  g('toast').appendChild(d);
+  setTimeout(()=>d.remove(),ms);
+}
+
+function calcEdad(){
+  const fn=new Date(g('fecha_nacimiento').value);
+  if(!g('fecha_nacimiento').value){g('edad').style.display='none';return;}
+  const h=new Date();let a=h.getFullYear()-fn.getFullYear();
+  const m=h.getMonth()-fn.getMonth();
+  if(m<0||(m===0&&h.getDate()<fn.getDate()))a--;
+  g('ev').textContent=a;g('edad').style.display='';
+}
+
+async function cargarCats(){
+  const sel=g('categoria');
+  if(sel.options.length>1)return;
+  try{
+    const r=await fetch('/api/categorias');
+    const cats=await r.json();
+    cats.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
+  }catch(e){}
+}
+
+function open_(){
+  g('mb').classList.add('open');
+  g('fecha_ingreso').value=new Date().toISOString().split('T')[0];
+  cargarCats();
+}
+function close_(){g('mb').classList.remove('open');g('mb').querySelectorAll('input,select').forEach(e=>e.type!=='radio'?e.value='':e.checked=false);g('edad').style.display='none';}
+function bg(e){if(e.target===g('mb'))close_();}
+
+async function enviar(){
+  const campos=['dojo','nombres','apellidos','cedula','telefono','direccion',
+                'correo','ciudad_nacimiento','ciudad_residencia','fecha_nacimiento','fecha_ingreso'];
+  const vacio=campos.filter(c=>!v(c));
+  if(vacio.length){toast('⚠️ Completá todos los campos.','terr');return;}
+  if(!v('categoria')){toast('⚠️ Seleccioná una categoría.','terr');return;}
+  const gen=document.querySelector('input[name="gen"]:checked');
+  if(!gen){toast('⚠️ Seleccioná el género.','terr');return;}
+  const btn=g('enviar');btn.disabled=true;btn.textContent='Registrando...';
+  try{
+    const r=await fetch('/api/registrar',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({nombres:v('nombres'),apellidos:v('apellidos'),cedula:v('cedula'),
+        telefono:v('telefono'),direccion:v('direccion'),correo:v('correo'),
+        ciudad_nacimiento:v('ciudad_nacimiento'),ciudad_residencia:v('ciudad_residencia'),
+        fecha_nacimiento:g('fecha_nacimiento').value,fecha_ingreso:g('fecha_ingreso').value,
+        categoria:v('categoria'),genero:gen.value,nombre_dojo:v('dojo')})});
+    const res=await r.json();
+    if(r.ok){toast('✅ '+res.mensaje,'tok');close_();cnt++;g('ok-count').style.display='';g('cnt').textContent=cnt;}
+    else toast('❌ '+res.error,'terr');
+  }catch(e){toast('❌ Error de conexión.','terr');}
+  finally{btn.disabled=false;btn.textContent='✅ Registrar Afiliado';}
+}
+</script>
+</body>
+</html>
