@@ -37,7 +37,7 @@ def categorias():
     try:
         conn = get_conn(); cur = conn.cursor()
         cur.execute("SELECT nombre FROM categorias ORDER BY nombre")
-        cats = [r[0] for r in cur.fetchall()]
+        cats = [r[0] for r in cur.fetchall() if "admin" not in r[0].lower()]
         release(conn); return jsonify(cats)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
