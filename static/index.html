@@ -3,50 +3,73 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AKP — Portal de Registro</title>
+<title>AKP — Portal</title>
 <style>
 :root{--p:#1A3A6B;--pd:#0F2347;--a:#2563EB;--t:#1E293B;--ts:#64748B;--b:#CBD5E1;--f:#F0F4F8;--s:#fff;--ok:#16A34A;--err:#DC2626}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--f);color:var(--t);min-height:100vh}
-header{background:var(--p);padding:14px 24px;display:flex;align-items:center;gap:12px;color:#fff;
-  box-shadow:0 2px 8px rgba(0,0,0,.2)}
+/* HEADER */
+header{background:var(--p);padding:14px 24px;display:flex;align-items:center;gap:12px;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.2);position:sticky;top:0;z-index:50}
 header h1{font-size:1.1rem;font-weight:700}
 header p{font-size:.75rem;opacity:.7;margin-top:2px}
+.btn-back{background:rgba(255,255,255,.15);border:none;color:#fff;padding:7px 14px;border-radius:8px;
+  cursor:pointer;font-family:inherit;font-size:.84rem;display:none;align-items:center;gap:6px}
+.btn-back:hover{background:rgba(255,255,255,.25)}
+/* SCREENS */
+.screen{display:none}.screen.active{display:block}
 .main{max-width:900px;margin:28px auto;padding:0 16px}
-/* SECCIÓN */
+/* SEC TITLE */
 .sec-title{font-size:.72rem;font-weight:700;color:var(--ts);text-transform:uppercase;
   letter-spacing:.1em;margin-bottom:12px;display:flex;align-items:center;gap:8px}
 .sec-title::after{content:'';flex:1;height:1px;background:var(--b)}
 /* CLUBS GRID */
-.clubs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:28px}
-.club-card{background:var(--s);border:1px solid var(--b);border-radius:12px;padding:14px 16px;
-  box-shadow:0 1px 4px rgba(0,0,0,.05)}
-.club-card-icon{font-size:1.4rem;margin-bottom:6px}
-.club-card-nombre{font-size:.95rem;font-weight:700;color:var(--p)}
-.club-card-meta{font-size:.75rem;color:var(--ts);margin-top:3px}
-.club-card-estado{display:inline-block;margin-top:6px;padding:2px 8px;border-radius:10px;
-  font-size:.68rem;font-weight:700}
-.estado-activo{background:#DCFCE7;color:var(--ok)}
-.estado-otro{background:#FEF3C7;color:#92400E}
+.clubs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.club-card{background:var(--s);border:1px solid var(--b);border-radius:14px;padding:18px 16px;
+  box-shadow:0 2px 8px rgba(0,0,0,.06);cursor:pointer;transition:all .15s;position:relative;overflow:hidden}
+.club-card:hover{border-color:var(--a);box-shadow:0 4px 16px rgba(37,99,235,.15);transform:translateY(-2px)}
+.club-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--a)}
+.club-icon{font-size:2rem;margin-bottom:8px}
+.club-nombre{font-size:.98rem;font-weight:700;color:var(--p);margin-bottom:3px}
+.club-meta{font-size:.76rem;color:var(--ts);margin-top:2px;display:flex;align-items:center;gap:4px}
+.club-estado{display:inline-block;margin-top:8px;padding:3px 9px;border-radius:10px;font-size:.68rem;font-weight:700}
+.activo{background:#DCFCE7;color:var(--ok)}.otro{background:#FEF3C7;color:#92400E}
+/* PÁGINA DEL CLUB */
+.club-hero{background:var(--p);padding:28px 24px;border-radius:14px;margin-bottom:24px;color:#fff;
+  display:flex;align-items:center;gap:16px}
+.club-hero-icon{width:60px;height:60px;border-radius:14px;background:rgba(255,255,255,.15);
+  display:flex;align-items:center;justify-content:center;font-size:1.8rem;flex-shrink:0}
+.club-hero h2{font-size:1.2rem;font-weight:700}
+.club-hero p{font-size:.82rem;opacity:.7;margin-top:4px}
+/* TABLA AFILIADOS */
+.tabla-wrap{background:var(--s);border:1px solid var(--b);border-radius:12px;overflow:hidden}
+.tabla-head{background:var(--p);display:grid;grid-template-columns:50px 1fr 1fr 120px 100px 90px;
+  padding:10px 14px;gap:8px}
+.tabla-head span{font-size:.68rem;font-weight:700;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.06em}
+.tabla-body{max-height:420px;overflow-y:auto}
+.tabla-fila{display:grid;grid-template-columns:50px 1fr 1fr 120px 100px 90px;
+  padding:10px 14px;gap:8px;border-bottom:1px solid var(--b);align-items:center}
+.tabla-fila:last-child{border-bottom:none}
+.tabla-fila:nth-child(even){background:var(--f)}
+.tabla-fila:hover{background:rgba(37,99,235,.05)}
+.tabla-fila span{font-size:.83rem;color:var(--t);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tabla-fila .sid{font-size:.75rem;color:var(--ts);font-weight:600}
+.tabla-empty{padding:40px;text-align:center;color:var(--ts);font-size:.88rem}
 /* BTN */
 .btn{background:var(--a);color:#fff;border:none;padding:10px 18px;border-radius:9px;
   font-size:.88rem;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px}
 .btn:hover{opacity:.9}
-.btn-outline{background:none;border:1px solid var(--a);color:var(--a);padding:9px 16px;
-  border-radius:9px;font-size:.85rem;font-weight:600;cursor:pointer;font-family:inherit}
-.btn-outline:hover{background:var(--a);color:#fff}
+.btn:disabled{opacity:.5;cursor:not-allowed}
 /* MODAL */
-.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;
   align-items:center;justify-content:center;padding:12px}
 .modal-bg.open{display:flex}
-.modal{background:var(--s);border-radius:14px;width:min(560px,100%);max-height:92vh;overflow-y:auto;
+.modal{background:var(--s);border-radius:14px;width:min(580px,100%);max-height:92vh;overflow-y:auto;
   box-shadow:0 20px 60px rgba(0,0,0,.25)}
 .mhdr{background:var(--p);padding:16px 22px;border-radius:14px 14px 0 0;
   display:flex;justify-content:space-between;align-items:center;color:#fff}
 .mhdr h2{font-size:.95rem;font-weight:700}
 .mhdr p{font-size:.72rem;opacity:.65;margin-top:2px}
-.x{background:rgba(255,255,255,.15);border:none;color:#fff;width:28px;height:28px;
-  border-radius:6px;cursor:pointer;font-size:.9rem}
+.x{background:rgba(255,255,255,.15);border:none;color:#fff;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:.9rem}
 .mbody{padding:20px 22px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .full{grid-column:1/-1}
@@ -57,55 +80,62 @@ header p{font-size:.75rem;opacity:.7;margin-top:2px}
 .f input:focus,.f select:focus{border-color:var(--a)}
 .sep{grid-column:1/-1;border:none;border-top:1px solid var(--b);margin:4px 0}
 .mfoot{display:flex;gap:8px;justify-content:flex-end;padding:14px 22px 20px;border-top:1px solid var(--b)}
-.btn-c{background:none;border:1px solid var(--b);color:var(--ts);padding:9px 16px;
-  border-radius:8px;cursor:pointer;font-family:inherit;font-size:.87rem}
+.btn-c{background:none;border:1px solid var(--b);color:var(--ts);padding:9px 16px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:.87rem}
 .btn-c:hover{border-color:var(--err);color:var(--err)}
-/* AFILIADOS */
-.registro-card{background:var(--s);border:1px solid var(--b);border-radius:12px;padding:18px 20px;
-  display:flex;align-items:center;justify-content:space-between;gap:14px;
-  box-shadow:0 1px 4px rgba(0,0,0,.05);margin-bottom:24px}
 /* TOAST */
 #toast{position:fixed;bottom:16px;right:16px;z-index:999;display:flex;flex-direction:column;gap:8px}
-.ti{padding:10px 14px;border-radius:9px;font-size:.84rem;font-weight:600;
-  box-shadow:0 4px 14px rgba(0,0,0,.18);max-width:300px}
+.ti{padding:10px 14px;border-radius:9px;font-size:.84rem;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.18);max-width:300px}
 .tok{background:#DCFCE7;border:1px solid var(--ok);color:var(--ok)}
 .terr{background:#FEE2E2;border:1px solid var(--err);color:var(--err)}
-@media(max-width:500px){.grid2{grid-template-columns:1fr}.clubs-grid{grid-template-columns:1fr}}
+@media(max-width:500px){.grid2{grid-template-columns:1fr}.clubs-grid{grid-template-columns:1fr}
+  .tabla-head,.tabla-fila{grid-template-columns:40px 1fr 1fr;}.tabla-head span:nth-child(n+4),.tabla-fila span:nth-child(n+4){display:none}}
 </style>
 </head>
 <body>
 <header>
-  <div style="font-size:1.8rem">🥋</div>
-  <div><h1>AKP — Portal de Registro</h1><p>Base de datos master de afiliados</p></div>
+  <button class="btn-back" id="btn-back" onclick="volverHome()">◀ Volver</button>
+  <div style="font-size:1.5rem">🥋</div>
+  <div><h1 id="header-title">AKP — Portal</h1><p id="header-sub">Base de datos de afiliados</p></div>
 </header>
 
-<main class="main">
-
-  <!-- CLUBS -->
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-    <div class="sec-title" style="flex:1;margin-bottom:0">🏫 Clubs registrados</div>
-    <button class="btn" style="margin-left:16px" onclick="openClub()">➕ Agregar Club</button>
-  </div>
-  <div class="clubs-grid" id="clubs-grid">
-    <div style="color:var(--ts);font-size:.85rem;padding:8px">Cargando clubs...</div>
-  </div>
-
-  <!-- REGISTRAR AFILIADO -->
-  <div class="sec-title">➕ Nuevo afiliado</div>
-  <div class="registro-card">
-    <div>
-      <div style="font-size:.95rem;font-weight:700;color:var(--p)">Registrar nuevo afiliado</div>
-      <div style="font-size:.78rem;color:var(--ts);margin-top:3px">La contraseña inicial será la cédula del deportista</div>
+<!-- PANTALLA HOME -->
+<div class="screen active" id="screen-home">
+  <div class="main">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="sec-title" style="flex:1;margin-bottom:0">🏫 Clubs</div>
+      <button class="btn" style="margin-left:16px" onclick="openModal('mb-club')">➕ Agregar Club</button>
     </div>
-    <button class="btn" onclick="openAfiliado()">➕ Agregar afiliado</button>
+    <div class="clubs-grid" id="clubs-grid">
+      <div style="color:var(--ts);font-size:.85rem;padding:8px">Cargando clubs...</div>
+    </div>
   </div>
+</div>
 
-  <div id="ok-count" hidden style="background:var(--s);border:1px solid var(--b);border-radius:10px;
-    padding:12px 16px;font-size:.88rem;color:var(--ts);margin-top:-12px;margin-bottom:20px">
-    ✅ Registrados en esta sesión: <strong id="cnt">0</strong>
+<!-- PANTALLA CLUB -->
+<div class="screen" id="screen-club">
+  <div class="main">
+    <div class="club-hero" id="club-hero">
+      <div class="club-hero-icon">🏫</div>
+      <div>
+        <h2 id="club-hero-nombre">—</h2>
+        <p id="club-hero-meta">—</p>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="sec-title" style="flex:1;margin-bottom:0">👥 Afiliados del Club</div>
+      <button class="btn" onclick="openAfiliadoClub()">➕ Agregar Afiliado</button>
+    </div>
+    <div class="tabla-wrap">
+      <div class="tabla-head">
+        <span>ID</span><span>Nombres</span><span>Apellidos</span>
+        <span>Cédula</span><span>Categoría</span><span>Ciudad</span>
+      </div>
+      <div class="tabla-body" id="tabla-body">
+        <div class="tabla-empty">Cargando...</div>
+      </div>
+    </div>
   </div>
-
-</main>
+</div>
 
 <!-- MODAL AGREGAR CLUB -->
 <div class="modal-bg" id="mb-club" onclick="bgClick(event,'mb-club')">
@@ -116,7 +146,7 @@ header p{font-size:.75rem;opacity:.7;margin-top:2px}
     </div>
     <div class="mbody">
       <div class="grid2">
-        <div class="f full"><label>Nombre del Club</label>
+        <div class="f full"><label>Nombre del Club *</label>
           <input id="c-nombre" placeholder="Ej: Dojo Quito Norte"></div>
         <div class="f"><label>Ciudad</label>
           <input id="c-ciudad" placeholder="Ej: Quito"></div>
@@ -127,14 +157,12 @@ header p{font-size:.75rem;opacity:.7;margin-top:2px}
             <option value="suspendido">Suspendido</option>
           </select></div>
         <hr class="sep">
-        <div class="f"><label>Nombres del Responsable</label>
+        <div class="f"><label>Nombres del Responsable *</label>
           <input id="c-nombres" placeholder="Ej: Juan Carlos"></div>
-        <div class="f"><label>Apellidos del Responsable</label>
+        <div class="f"><label>Apellidos del Responsable *</label>
           <input id="c-apellidos" placeholder="Ej: González Ruiz"></div>
-        <div class="f"><label>Cédula del Responsable</label>
+        <div class="f"><label>Cédula del Responsable *</label>
           <input id="c-cedula" inputmode="numeric" maxlength="20" placeholder="Ej: 1712345678"></div>
-        <div class="f"><label>Teléfono (opcional)</label>
-          <input id="c-telefono" placeholder="Ej: 0991234567"></div>
       </div>
     </div>
     <div class="mfoot">
@@ -144,45 +172,43 @@ header p{font-size:.75rem;opacity:.7;margin-top:2px}
   </div>
 </div>
 
-<!-- MODAL AGREGAR AFILIADO -->
+<!-- MODAL AGREGAR AFILIADO AL CLUB -->
 <div class="modal-bg" id="mb-afil" onclick="bgClick(event,'mb-afil')">
   <div class="modal">
     <div class="mhdr">
-      <div><h2>➕ Nuevo Afiliado</h2><p>Completá todos los campos</p></div>
+      <div><h2>➕ Nuevo Afiliado</h2><p id="mb-afil-sub">—</p></div>
       <button class="x" onclick="closeModal('mb-afil')">✕</button>
     </div>
     <div class="mbody">
       <div class="grid2">
-        <div class="f"><label>Nombres</label>
+        <div class="f"><label>Nombres *</label>
           <input id="a-nombres" placeholder="Ej: Juan Carlos"></div>
-        <div class="f"><label>Apellidos</label>
+        <div class="f"><label>Apellidos *</label>
           <input id="a-apellidos" placeholder="Ej: González Ruiz"></div>
-        <div class="f"><label>Cédula</label>
-          <input id="a-cedula" inputmode="numeric" maxlength="20" placeholder="Ej: 1712345678"></div>
-        <div class="f"><label>Teléfono</label>
+        <div class="f"><label>Cédula *</label>
+          <input id="a-cedula" inputmode="numeric" maxlength="20"></div>
+        <div class="f"><label>Teléfono *</label>
           <input id="a-telefono" placeholder="Ej: 0991234567"></div>
-        <div class="f full"><label>Dirección</label>
-          <input id="a-direccion" placeholder="Ej: Av. 10 de Agosto y Colón"></div>
-        <div class="f full"><label>Correo Electrónico</label>
-          <input id="a-correo" type="email" placeholder="juan@email.com"></div>
-        <div class="f"><label>Ciudad de Nacimiento</label>
-          <input id="a-ciudad-nac" placeholder="Ej: Quito"></div>
-        <div class="f"><label>Ciudad de Residencia</label>
-          <input id="a-ciudad-res" placeholder="Ej: Guayaquil"></div>
-        <div class="f"><label>Fecha de Nacimiento</label>
+        <div class="f full"><label>Dirección *</label>
+          <input id="a-direccion"></div>
+        <div class="f full"><label>Correo Electrónico *</label>
+          <input id="a-correo" type="email"></div>
+        <div class="f"><label>Ciudad de Nacimiento *</label>
+          <input id="a-ciudad-nac"></div>
+        <div class="f"><label>Ciudad de Residencia *</label>
+          <input id="a-ciudad-res"></div>
+        <div class="f"><label>Fecha de Nacimiento *</label>
           <input id="a-fnac" type="date" oninput="calcEdad()"></div>
-        <div class="f"><label>Fecha de Ingreso</label>
+        <div class="f"><label>Fecha de Ingreso *</label>
           <input id="a-fing" type="date"></div>
-        <div class="f"><label>Categoría</label>
+        <div class="f"><label>Categoría *</label>
           <select id="a-cat"><option value="">— Seleccioná —</option></select></div>
-        <div class="f"><label>Género</label>
+        <div class="f"><label>Género *</label>
           <select id="a-gen">
             <option value="">— Seleccioná —</option>
             <option value="Hombre">Hombre</option>
             <option value="Mujer">Mujer</option>
           </select></div>
-        <div class="f"><label>Club</label>
-          <select id="a-club"><option value="">— Sin club —</option></select></div>
       </div>
       <div id="edad-hint" hidden style="margin-top:10px;font-size:.76rem;color:var(--ts);
         background:var(--f);padding:7px 11px;border-radius:7px;border-left:3px solid var(--a)">
@@ -197,19 +223,18 @@ header p{font-size:.75rem;opacity:.7;margin-top:2px}
 </div>
 
 <div id="toast"></div>
-
 <script>
-let cnt=0, CLUBS=[], CATS=[];
+let CLUBS=[], CATS=[], CLUB_ACTIVO=null;
 const g=id=>document.getElementById(id);
 const v=id=>g(id)?.value?.trim()||'';
+const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
 function toast(msg,tipo,ms=4000){
-  const d=document.createElement('div');
-  d.className=`ti t${tipo}`;d.textContent=msg;
-  g('toast').appendChild(d);
-  setTimeout(()=>d.remove(),ms);
+  const d=document.createElement('div');d.className=`ti t${tipo}`;d.textContent=msg;
+  g('toast').appendChild(d);setTimeout(()=>d.remove(),ms);
 }
 function bgClick(e,id){if(e.target===g(id))closeModal(id);}
+function openModal(id){g(id).classList.add('open');}
 function closeModal(id){
   g(id).classList.remove('open');
   g(id).querySelectorAll('input').forEach(e=>e.value='');
@@ -217,35 +242,76 @@ function closeModal(id){
   g('edad-hint').hidden=true;
 }
 
-// ── Cargar datos iniciales ─────────────────────────────────────────────────
+// ── Navegación ─────────────────────────────────────────────────────────────
+function mostrarScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  g(id).classList.add('active');
+  const enClub = id==='screen-club';
+  g('btn-back').style.display = enClub?'inline-flex':'none';
+}
+function volverHome(){mostrarScreen('screen-home');}
+
+// ── Cargar datos ────────────────────────────────────────────────────────────
 async function cargarTodo(){
   const [rc,rk]=await Promise.all([fetch('/api/categorias'),fetch('/api/clubs')]);
   if(rc.ok) CATS=await rc.json();
   if(rk.ok) CLUBS=await rk.json();
   renderClubs();
-  // Poblar selects
-  CATS.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;g('a-cat').appendChild(o);});
-  CLUBS.forEach(c=>{
-    const o=document.createElement('option');
-    o.value=c.id;o.textContent=c.nombre;
-    g('a-club').appendChild(o);
-  });
+  const sel=g('a-cat');sel.innerHTML='<option value="">— Seleccioná —</option>';
+  CATS.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
 }
 
 function renderClubs(){
   const grid=g('clubs-grid');
-  if(!CLUBS.length){grid.innerHTML='<div style="color:var(--ts);font-size:.85rem">No hay clubs registrados aún.</div>';return;}
+  if(!CLUBS.length){grid.innerHTML='<div style="color:var(--ts);font-size:.85rem;padding:12px">No hay clubs registrados aún.</div>';return;}
   grid.innerHTML=CLUBS.map(c=>`
-    <div class="club-card">
-      <div class="club-card-icon">🏫</div>
-      <div class="club-card-nombre">${esc(c.nombre)}</div>
-      <div class="club-card-meta">📍 ${esc(c.ciudad||'—')}</div>
-      <div class="club-card-meta">👤 ${esc(c.nombres_dueno)} ${esc(c.apellidos_dueno)}</div>
-      <span class="club-card-estado ${c.estado==='activo'?'estado-activo':'estado-otro'}">${c.estado}</span>
+    <div class="club-card" onclick="abrirClub(${c.id})">
+      <div class="club-icon">🏫</div>
+      <div class="club-nombre">${esc(c.nombre)}</div>
+      <div class="club-meta">📍 ${esc(c.ciudad||'—')}</div>
+      <div class="club-meta">👤 ${esc(c.nombres_dueno)} ${esc(c.apellidos_dueno)}</div>
+      <span class="club-estado ${c.estado==='activo'?'activo':'otro'}">${esc(c.estado)}</span>
     </div>`).join('');
 }
 
-const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+// ── Abrir página del club ──────────────────────────────────────────────────
+async function abrirClub(club_id){
+  CLUB_ACTIVO = CLUBS.find(c=>c.id===club_id);
+  if(!CLUB_ACTIVO) return;
+  g('club-hero-nombre').textContent = CLUB_ACTIVO.nombre;
+  g('club-hero-meta').textContent = `📍 ${CLUB_ACTIVO.ciudad||'—'}  ·  👤 ${CLUB_ACTIVO.nombres_dueno} ${CLUB_ACTIVO.apellidos_dueno}`;
+  g('header-title').textContent = CLUB_ACTIVO.nombre;
+  g('header-sub').textContent = 'Afiliados del club';
+  mostrarScreen('screen-club');
+  cargarAfiliados(club_id);
+}
+
+async function cargarAfiliados(club_id){
+  const body = g('tabla-body');
+  body.innerHTML='<div class="tabla-empty">Cargando...</div>';
+  try{
+    const r=await fetch(`/api/clubs/${club_id}/afiliados`);
+    const data=await r.json();
+    if(!r.ok){body.innerHTML=`<div class="tabla-empty">Error: ${esc(data.error)}</div>`;return;}
+    if(!data.length){body.innerHTML='<div class="tabla-empty">Sin afiliados en este club aún.</div>';return;}
+    body.innerHTML=data.map((m,i)=>`
+      <div class="tabla-fila">
+        <span class="sid">#${m.id}</span>
+        <span>${esc(m.nombres)}</span>
+        <span>${esc(m.apellidos)}</span>
+        <span>${esc(m.cedula)}</span>
+        <span>${esc(m.categoria||'—')}</span>
+        <span>${esc(m.ciudad_residencia||'—')}</span>
+      </div>`).join('');
+  }catch(e){body.innerHTML='<div class="tabla-empty">Error de conexión.</div>';}
+}
+
+function openAfiliadoClub(){
+  if(!CLUB_ACTIVO) return;
+  g('mb-afil-sub').textContent=`Agregar a: ${CLUB_ACTIVO.nombre}`;
+  g('a-fing').value=new Date().toISOString().split('T')[0];
+  openModal('mb-afil');
+}
 
 function calcEdad(){
   const fn=new Date(g('a-fnac').value);
@@ -255,33 +321,23 @@ function calcEdad(){
   g('edad-val').textContent=a;g('edad-hint').hidden=false;
 }
 
-// ── Modales ────────────────────────────────────────────────────────────────
-function openClub(){g('mb-club').classList.add('open');}
-function openAfiliado(){
-  g('mb-afil').classList.add('open');
-  g('a-fing').value=new Date().toISOString().split('T')[0];
-}
-
-// ── Enviar Club ────────────────────────────────────────────────────────────
+// ── Enviar Club ─────────────────────────────────────────────────────────────
 async function enviarClub(){
-  const campos={nombre:v('c-nombre'),ciudad:v('c-ciudad'),estado:v('c-estado'),
-                nombres_dueno:v('c-nombres'),apellidos_dueno:v('c-apellidos'),
-                cedula_dueno:v('c-cedula')};
-  if(!campos.nombre||!campos.nombres_dueno||!campos.apellidos_dueno||!campos.cedula_dueno){
+  if(!v('c-nombre')||!v('c-nombres')||!v('c-apellidos')||!v('c-cedula')){
     toast('⚠️ Completá los campos obligatorios.','err');return;}
   const btn=g('btn-club');btn.disabled=true;btn.textContent='Guardando...';
   try{
     const r=await fetch('/api/clubs',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({...campos,telefono:v('c-telefono')})});
+      body:JSON.stringify({nombre:v('c-nombre'),ciudad:v('c-ciudad'),estado:v('c-estado'),
+        nombres_dueno:v('c-nombres'),apellidos_dueno:v('c-apellidos'),cedula_dueno:v('c-cedula')})});
     const res=await r.json();
-    if(r.ok){toast('✅ '+res.mensaje,'ok');closeModal('mb-club');
-      CLUBS=res.clubs||CLUBS;await cargarTodo();}
+    if(r.ok){toast('✅ '+res.mensaje,'ok');closeModal('mb-club');CLUBS=res.clubs||[];renderClubs();}
     else toast('❌ '+res.error,'err');
   }catch(e){toast('❌ Error de conexión.','err');}
   finally{btn.disabled=false;btn.textContent='💾 Guardar Club';}
 }
 
-// ── Enviar Afiliado ────────────────────────────────────────────────────────
+// ── Enviar Afiliado ─────────────────────────────────────────────────────────
 async function enviarAfiliado(){
   const req=['a-nombres','a-apellidos','a-cedula','a-telefono','a-direccion',
              'a-correo','a-ciudad-nac','a-ciudad-res','a-fnac','a-fing','a-cat','a-gen'];
@@ -289,18 +345,18 @@ async function enviarAfiliado(){
   const btn=g('btn-afil');btn.disabled=true;btn.textContent='Registrando...';
   try{
     const r=await fetch('/api/registrar',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        nombres:v('a-nombres'),apellidos:v('a-apellidos'),cedula:v('a-cedula'),
+      body:JSON.stringify({nombres:v('a-nombres'),apellidos:v('a-apellidos'),cedula:v('a-cedula'),
         telefono:v('a-telefono'),direccion:v('a-direccion'),correo:v('a-correo'),
         ciudad_nacimiento:v('a-ciudad-nac'),ciudad_residencia:v('a-ciudad-res'),
         fecha_nacimiento:g('a-fnac').value,fecha_ingreso:g('a-fing').value,
         categoria:v('a-cat'),genero:v('a-gen'),
-        club_id:v('a-club')||null
-      })});
+        club_id:CLUB_ACTIVO?.id||null})});
     const res=await r.json();
-    if(r.ok){toast('✅ '+res.mensaje,'ok');closeModal('mb-afil');
-      cnt++;g('ok-count').hidden=false;g('cnt').textContent=cnt;}
-    else toast('❌ '+res.error,'err');
+    if(r.ok){
+      toast('✅ '+res.mensaje,'ok');
+      closeModal('mb-afil');
+      cargarAfiliados(CLUB_ACTIVO.id);
+    }else toast('❌ '+res.error,'err');
   }catch(e){toast('❌ Error de conexión.','err');}
   finally{btn.disabled=false;btn.textContent='✅ Registrar Afiliado';}
 }
