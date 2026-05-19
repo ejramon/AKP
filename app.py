@@ -5,7 +5,7 @@ import psycopg2
 from psycopg2 import pool as pg_pool
 
 app = Flask(__name__, static_folder="static", static_url_path="")
-DATABASE_URL = os.environ.get("DATABASE_URL", "")
+DATABASE_URL = os.environ.get("DATABASE_URL_MIEMBROS", os.environ.get("DATABASE_URL", ""))
 _pool = None
 
 def get_conn():
