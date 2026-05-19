@@ -98,6 +98,7 @@ header{background:var(--p);padding:12px 20px;display:flex;align-items:center;gap
 .cal-day.selected{background:var(--a);color:#fff;border-color:var(--a)}
 .cal-day.selected:hover{background:var(--pd)}
 .cal-day.has-data .dot{width:5px;height:5px;border-radius:50%;background:var(--ok);position:absolute;bottom:3px}
+.cal-day.has-data.solo-ausentes .dot{background:var(--err)}
 .cal-day.selected .dot{background:#fff}
 .lista-asist{background:var(--s);border:1px solid var(--b);border-radius:14px;overflow:hidden}
 .asist-fecha-hdr{background:var(--pd);padding:12px 16px;color:#fff;font-size:.85rem;font-weight:700}
@@ -605,7 +606,8 @@ function renderCal(){
     const isHoy=dateStr===hoyStr;
     const isSel=dateStr===ASIST_DIA;
     const hasData=ASIST_RESUMEN[dateStr];
-    html+=`<div class="cal-day${isHoy?' today':''}${isSel?' selected':''}${hasData?' has-data':''}" onclick="selDia('${dateStr}')">
+    const soloAus=hasData && hasData.presentes===0;
+    html+=`<div class="cal-day${isHoy?' today':''}${isSel?' selected':''}${hasData?' has-data':''}${soloAus?' solo-ausentes':''}" onclick="selDia('${dateStr}')">
       ${d}${hasData?'<span class="dot"></span>':''}
     </div>`;
   }
@@ -683,9 +685,12 @@ async function guardarAsistencia(){
     if(r.ok){
       toast('✅ Asistencia guardada.','ok');
       // Actualizar resumen local
-      const presentes=registros.filter(x=>x.estado==='presente').length;
-      if(presentes>0) ASIST_RESUMEN[ASIST_DIA]={presentes,total:registros.length};
-      else delete ASIST_RESUMEN[ASIST_DIA];
+      const conRegistro=registros.filter(x=>x.estado!=='sin_registro').length;
+      if(conRegistro>0){
+        const presentes=registros.filter(x=>x.estado==='presente').length;
+        const ausentes=registros.filter(x=>x.estado==='ausente').length;
+        ASIST_RESUMEN[ASIST_DIA]={presentes,ausentes,total:conRegistro};
+      } else delete ASIST_RESUMEN[ASIST_DIA];
       renderCal();
     }else toast(`❌ ${res.error}`,'err');
   }catch(e){toast('❌ Error de conexión.','err');}
