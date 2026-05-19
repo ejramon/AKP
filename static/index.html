@@ -164,7 +164,10 @@ header{background:var(--p);padding:12px 20px;display:flex;align-items:center;gap
     </div>
     <div class="sec-hdr">
       <div class="sec-title">👥 Afiliados</div>
-      <button class="btn" onclick="openAfiliadoNew()">➕ Agregar Afiliado</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn" style="background:var(--p)" onclick="abrirAsistencia(CLUB_ACTIVO?.id)">📋 Control de Asistencia</button>
+        <button class="btn" onclick="openAfiliadoNew()">➕ Agregar Afiliado</button>
+      </div>
     </div>
     <div class="tabla-wrap">
       <div class="t-head cols7">
@@ -372,15 +375,12 @@ function renderClubs(){
   const gr=g('clubs-grid');
   if(!CLUBS.length){gr.innerHTML='<div style="color:var(--ts);font-size:.85rem;padding:8px">No hay clubs registrados.</div>';return;}
   gr.innerHTML=CLUBS.map(c=>`
-    <div class="club-card">
-      <div onclick="abrirClub(${c.id})" style="cursor:pointer">
-        <div class="club-icon">🏫</div>
-        <div class="club-nombre">${esc(c.nombre)}</div>
-        <div class="club-meta">📍 ${esc(c.ciudad||'—')}</div>
-        <div class="club-meta">👤 ${esc(c.nombres_dueno)} ${esc(c.apellidos_dueno)}</div>
-        <span class="badge ${c.estado==='activo'?'activo':'otro'}">${esc(c.estado)}</span>
-      </div>
-      <button class="btn-asist" onclick="event.stopPropagation();abrirAsistencia(${c.id})">📋 Control de Asistencia</button>
+    <div class="club-card" onclick="abrirClub(${c.id})">
+      <div class="club-icon">🏫</div>
+      <div class="club-nombre">${esc(c.nombre)}</div>
+      <div class="club-meta">📍 ${esc(c.ciudad||'—')}</div>
+      <div class="club-meta">👤 ${esc(c.nombres_dueno)} ${esc(c.apellidos_dueno)}</div>
+      <span class="badge ${c.estado==='activo'?'activo':'otro'}">${esc(c.estado)}</span>
     </div>`).join('');
 }
 
