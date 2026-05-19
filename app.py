@@ -226,6 +226,84 @@ def add_historial(socio_id):
         except: pass
         return jsonify({"error":str(e)}), 500
 
+# ── Asistencia ─────────────────────────────────────────────────────────────
+@app.route("/api/clubs/<int:club_id>/asistencia")
+def get_asistencia(club_id):
+    """Devuelve todos los registros de asistencia del club. Opcional: ?fecha=YYYY-MM-DD"""
+    fecha = request.args.get("fecha")
+    try:
+        conn = get_conn(); cur = conn.cursor()
+        if fecha:
+            cur.execute("""SELECT a.socio_id, a.estado
+                           FROM asistencia a
+                           WHERE a.club_id=%s AND a.fecha=%s""",
+                        (club_id, fecha))
+            rows = {str(r[0]): r[1] for r in cur.fetchall()}
+        else:
+            cur.execute("""SELECT TO_CHAR(a.fecha,'YYYY-MM-DD'), a.socio_id, a.estado
+                           FROM asistencia a
+                           WHERE a.club_id=%s ORDER BY a.fecha""", (club_id,))
+            rows = {}
+            for fecha_s, sid, estado in cur.fetchall():
+                rows.setdefault(fecha_s, {})[str(sid)] = estado
+        release(conn); return jsonify(rows)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/clubs/<int:club_id>/asistencia", methods=["POST"])
+def guardar_asistencia(club_id):
+    """Guarda/actualiza asistencia para una fecha. Body: {fecha, registros: [{socio_id, estado}]}"""
+    d = request.get_json(force=True) or {}
+    fecha = d.get("fecha")
+    registros = d.get("registros", [])
+    if not fecha:
+        return jsonify({"error": "Falta fecha"}), 400
+    try:
+        conn = get_conn(); cur = conn.cursor()
+        # Crear tabla si no existe (migración inline)
+        cur.execute("""CREATE TABLE IF NOT EXISTS asistencia (
+            id       SERIAL PRIMARY KEY,
+            club_id  INTEGER NOT NULL,
+            socio_id INTEGER NOT NULL,
+            fecha    DATE    NOT NULL,
+            estado   VARCHAR(20) NOT NULL DEFAULT 'sin_registro',
+            UNIQUE(club_id, socio_id, fecha)
+        )""")
+        for reg in registros:
+            sid   = int(reg["socio_id"])
+            estado = reg.get("estado", "sin_registro")
+            cur.execute("""INSERT INTO asistencia (club_id, socio_id, fecha, estado)
+                           VALUES (%s,%s,%s,%s)
+                           ON CONFLICT (club_id, socio_id, fecha)
+                           DO UPDATE SET estado=EXCLUDED.estado""",
+                        (club_id, sid, fecha, estado))
+        conn.commit(); release(conn)
+        return jsonify({"ok": True, "mensaje": f"Asistencia guardada para {fecha}."})
+    except Exception as e:
+        try: conn.rollback(); release(conn)
+        except: pass
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/clubs/<int:club_id>/asistencia/resumen")
+def resumen_asistencia(club_id):
+    """Devuelve {fecha: {total, presentes}} para pintar el calendario."""
+    try:
+        conn = get_conn(); cur = conn.cursor()
+        cur.execute("""CREATE TABLE IF NOT EXISTS asistencia (
+            id SERIAL PRIMARY KEY, club_id INTEGER NOT NULL,
+            socio_id INTEGER NOT NULL, fecha DATE NOT NULL,
+            estado VARCHAR(20) NOT NULL DEFAULT 'sin_registro',
+            UNIQUE(club_id, socio_id, fecha))""")
+        cur.execute("""SELECT TO_CHAR(fecha,'YYYY-MM-DD'),
+                              COUNT(*) FILTER (WHERE estado='presente') AS p,
+                              COUNT(*) AS t
+                       FROM asistencia WHERE club_id=%s
+                       GROUP BY fecha""", (club_id,))
+        rows = {r[0]: {"presentes": r[1], "total": r[2]} for r in cur.fetchall()}
+        release(conn); return jsonify(rows)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route("/health")
 def health():
     return "ok", 200
