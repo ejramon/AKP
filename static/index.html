@@ -117,6 +117,11 @@ header{background:var(--p);padding:12px 20px;display:flex;align-items:center;gap
 .asist-resumen{font-size:.76rem;color:var(--ts)}
 .asist-placeholder{padding:48px 24px;text-align:center;color:var(--ts);font-size:.86rem}
 
+/* ── Screen asistencia ── */
+#s-asist .main{max-width:960px;margin:22px auto;padding:0 16px}
+.btn-asist{display:block;width:100%;margin-top:10px;background:var(--p);color:#fff;border:none;padding:8px 12px;border-radius:8px;font-size:.78rem;font-weight:700;cursor:pointer;font-family:inherit;text-align:left;display:flex;align-items:center;gap:6px;transition:background .15s}
+.btn-asist:hover{background:var(--pd)}
+
 @media(max-width:680px){
   .asist-layout{grid-template-columns:1fr}
   .cal-day{font-size:.72rem}
@@ -192,7 +197,34 @@ header{background:var(--p);padding:12px 20px;display:flex;align-items:center;gap
   </div>
 </div>
 
-<!-- MODAL CLUB -->
+<!-- ASISTENCIA -->
+<div class="screen" id="s-asist">
+  <div class="main">
+    <div class="club-hero" id="asist-hero">
+      <div class="club-hero-icon">📅</div>
+      <div><h2 id="asist-club-nombre">—</h2><p id="asist-club-meta">Control de Asistencia</p></div>
+    </div>
+    <div class="asist-layout">
+      <!-- Calendario -->
+      <div class="cal-wrap">
+        <div class="cal-nav">
+          <button onclick="calPrev()">◀</button>
+          <span id="cal-titulo">—</span>
+          <button onclick="calNext()">▶</button>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+      </div>
+      <!-- Lista de asistencia -->
+      <div>
+        <div class="lista-asist" id="asist-lista">
+          <div class="asist-placeholder">📅 Seleccioná un día en el calendario para registrar asistencia.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <div class="modal-bg" id="m-club" onclick="bgc(event,'m-club')">
   <div class="modal">
     <div class="mhdr">
@@ -340,12 +372,15 @@ function renderClubs(){
   const gr=g('clubs-grid');
   if(!CLUBS.length){gr.innerHTML='<div style="color:var(--ts);font-size:.85rem;padding:8px">No hay clubs registrados.</div>';return;}
   gr.innerHTML=CLUBS.map(c=>`
-    <div class="club-card" onclick="abrirClub(${c.id})">
-      <div class="club-icon">🏫</div>
-      <div class="club-nombre">${esc(c.nombre)}</div>
-      <div class="club-meta">📍 ${esc(c.ciudad||'—')}</div>
-      <div class="club-meta">👤 ${esc(c.nombres_dueno)} ${esc(c.apellidos_dueno)}</div>
-      <span class="badge ${c.estado==='activo'?'activo':'otro'}">${esc(c.estado)}</span>
+    <div class="club-card">
+      <div onclick="abrirClub(${c.id})" style="cursor:pointer">
+        <div class="club-icon">🏫</div>
+        <div class="club-nombre">${esc(c.nombre)}</div>
+        <div class="club-meta">📍 ${esc(c.ciudad||'—')}</div>
+        <div class="club-meta">👤 ${esc(c.nombres_dueno)} ${esc(c.apellidos_dueno)}</div>
+        <span class="badge ${c.estado==='activo'?'activo':'otro'}">${esc(c.estado)}</span>
+      </div>
+      <button class="btn-asist" onclick="event.stopPropagation();abrirAsistencia(${c.id})">📋 Control de Asistencia</button>
     </div>`).join('');
 }
 
@@ -524,6 +559,137 @@ async function enviarClub(){
     else toast('❌ '+res.error,'err');
   }catch(e){toast('❌ Error de conexión.','err');}
   finally{btn.disabled=false;btn.textContent='💾 Guardar Club';}
+}
+
+// ── Asistencia ──────────────────────────────────────────────────────────────
+let ASIST_CLUB=null, ASIST_AFILIADOS=[], ASIST_RESUMEN={}, ASIST_DIA=null, ASIST_DIA_DATA={};
+let CAL_YEAR=new Date().getFullYear(), CAL_MONTH=new Date().getMonth();
+const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DIAS_SHORT=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+
+async function abrirAsistencia(club_id){
+  ASIST_CLUB=CLUBS.find(c=>c.id===club_id);
+  if(!ASIST_CLUB)return;
+  ASIST_DIA=null; ASIST_DIA_DATA={};
+  CAL_YEAR=new Date().getFullYear(); CAL_MONTH=new Date().getMonth();
+  g('asist-club-nombre').textContent=ASIST_CLUB.nombre;
+  g('asist-club-meta').textContent=`📍 ${ASIST_CLUB.ciudad||'—'} · Control de Asistencia`;
+  g('asist-lista').innerHTML='<div class="asist-placeholder">📅 Seleccioná un día en el calendario para registrar asistencia.</div>';
+  goScreen('asist',`Asistencia — ${ASIST_CLUB.nombre}`,'Control de asistencia',()=>{
+    goScreen('asist',`Asistencia — ${ASIST_CLUB.nombre}`,'Control de asistencia');
+  });
+  // Cargar afiliados y resumen en paralelo
+  const[ra,rr]=await Promise.all([
+    fetch(`/api/clubs/${club_id}/afiliados`),
+    fetch(`/api/clubs/${club_id}/asistencia/resumen`)
+  ]);
+  if(ra.ok) ASIST_AFILIADOS=await ra.json(); else ASIST_AFILIADOS=[];
+  if(rr.ok) ASIST_RESUMEN=await rr.json(); else ASIST_RESUMEN={};
+  renderCal();
+}
+
+function calPrev(){CAL_MONTH--;if(CAL_MONTH<0){CAL_MONTH=11;CAL_YEAR--;}renderCal();}
+function calNext(){CAL_MONTH++;if(CAL_MONTH>11){CAL_MONTH=0;CAL_YEAR++;}renderCal();}
+
+function renderCal(){
+  g('cal-titulo').textContent=`${MESES[CAL_MONTH]} ${CAL_YEAR}`;
+  const grid=g('cal-grid');
+  const hoy=new Date(); const hoyStr=`${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
+  // Cabecera días
+  let html=DIAS_SHORT.map(d=>`<div class="cal-dow">${d}</div>`).join('');
+  const primerDia=new Date(CAL_YEAR,CAL_MONTH,1).getDay();
+  const diasMes=new Date(CAL_YEAR,CAL_MONTH+1,0).getDate();
+  for(let i=0;i<primerDia;i++) html+=`<div class="cal-day empty"></div>`;
+  for(let d=1;d<=diasMes;d++){
+    const dateStr=`${CAL_YEAR}-${String(CAL_MONTH+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isHoy=dateStr===hoyStr;
+    const isSel=dateStr===ASIST_DIA;
+    const hasData=ASIST_RESUMEN[dateStr];
+    html+=`<div class="cal-day${isHoy?' today':''}${isSel?' selected':''}${hasData?' has-data':''}" onclick="selDia('${dateStr}')">
+      ${d}${hasData?'<span class="dot"></span>':''}
+    </div>`;
+  }
+  grid.innerHTML=html;
+}
+
+async function selDia(dateStr){
+  ASIST_DIA=dateStr;
+  renderCal();
+  const lista=g('asist-lista');
+  lista.innerHTML='<div class="asist-placeholder">Cargando...</div>';
+  // Cargar asistencia del día
+  try{
+    const r=await fetch(`/api/clubs/${ASIST_CLUB.id}/asistencia?fecha=${dateStr}`);
+    ASIST_DIA_DATA=r.ok?(await r.json()):{};
+  }catch(e){ASIST_DIA_DATA={};}
+  renderListaAsistencia(dateStr);
+}
+
+function renderListaAsistencia(dateStr){
+  const lista=g('asist-lista');
+  if(!ASIST_AFILIADOS.length){
+    lista.innerHTML='<div class="asist-fecha-hdr">'+esc(dateStr)+'</div><div class="asist-placeholder">No hay afiliados en este club.</div>';
+    return;
+  }
+  const [y,m,d]=dateStr.split('-');
+  const fechaLegible=`${d}/${m}/${y}`;
+  let presentes=0,ausentes=0,sinReg=0;
+  ASIST_AFILIADOS.forEach(a=>{
+    const est=ASIST_DIA_DATA[String(a.id)]||'sin_registro';
+    if(est==='presente')presentes++;
+    else if(est==='ausente')ausentes++;
+    else sinReg++;
+  });
+  const rows=ASIST_AFILIADOS.map(a=>{
+    const sid=String(a.id);
+    const est=ASIST_DIA_DATA[sid]||'sin_registro';
+    return `<div class="asist-row" id="ar-${a.id}">
+      <div>
+        <div class="asist-nombre">${esc(a.nombres)} ${esc(a.apellidos)}</div>
+        <div class="asist-cat">${esc(a.categoria||'—')} · #${a.id}</div>
+      </div>
+      <div class="asist-btns">
+        <button class="ab ab-p${est==='presente'?' active':''}" onclick="setAsist(${a.id},'presente')" title="Presente">✅ P</button>
+        <button class="ab ab-a${est==='ausente'?' active':''}" onclick="setAsist(${a.id},'ausente')" title="Ausente">❌ A</button>
+        <button class="ab ab-s${est==='sin_registro'?' active':''}" onclick="setAsist(${a.id},'sin_registro')" title="Sin registro">⬜ —</button>
+      </div>
+    </div>`;
+  }).join('');
+  lista.innerHTML=`
+    <div class="asist-fecha-hdr">📅 ${fechaLegible}</div>
+    ${rows}
+    <div class="asist-footer">
+      <div class="asist-resumen">✅ ${presentes} presentes · ❌ ${ausentes} ausentes · ⬜ ${sinReg} sin registro</div>
+      <button class="btn btn-green btn-sm" onclick="guardarAsistencia()">💾 Guardar</button>
+    </div>`;
+}
+
+function setAsist(socio_id,estado){
+  ASIST_DIA_DATA[String(socio_id)]=estado;
+  renderListaAsistencia(ASIST_DIA);
+}
+
+async function guardarAsistencia(){
+  if(!ASIST_DIA||!ASIST_CLUB)return;
+  const registros=ASIST_AFILIADOS.map(a=>({socio_id:a.id,estado:ASIST_DIA_DATA[String(a.id)]||'sin_registro'}));
+  const btn=document.querySelector('.asist-footer .btn');
+  if(btn){btn.disabled=true;btn.textContent='Guardando...';}
+  try{
+    const r=await fetch(`/api/clubs/${ASIST_CLUB.id}/asistencia`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({fecha:ASIST_DIA,registros})
+    });
+    const res=await r.json();
+    if(r.ok){
+      toast('✅ Asistencia guardada.','ok');
+      // Actualizar resumen local
+      const presentes=registros.filter(x=>x.estado==='presente').length;
+      if(presentes>0) ASIST_RESUMEN[ASIST_DIA]={presentes,total:registros.length};
+      else delete ASIST_RESUMEN[ASIST_DIA];
+      renderCal();
+    }else toast(`❌ ${res.error}`,'err');
+  }catch(e){toast('❌ Error de conexión.','err');}
+  finally{if(btn){btn.disabled=false;btn.textContent='💾 Guardar';}}
 }
 
 cargarTodo();
