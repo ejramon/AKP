@@ -123,7 +123,25 @@ def registrar():
             return jsonify({"error": "Ya existe un afiliado con esa cédula."}), 409
         return jsonify({"error": str(e)}), 500
 
-@app.route("/health")
+@app.route("/api/clubs/<int:club_id>/afiliados")
+def afiliados_club(club_id):
+    try:
+        conn = get_conn(); cur = conn.cursor()
+        cur.execute("""SELECT id, nombres, apellidos, cedula, categoria,
+                              ciudad_residencia, telefono,
+                              TO_CHAR(fecha_nacimiento,'DD/MM/YYYY'),
+                              DATE_PART('year', AGE(fecha_nacimiento))::int
+                       FROM miembros WHERE club_id=%s
+                       ORDER BY apellidos, nombres""", (club_id,))
+        cols=["id","nombres","apellidos","cedula","categoria",
+              "ciudad_residencia","telefono","fecha_nacimiento","edad"]
+        rows=[dict(zip(cols,r)) for r in cur.fetchall()]
+        release(conn)
+        return jsonify(rows)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 def health():
     return "ok", 200
 
