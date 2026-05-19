@@ -296,10 +296,13 @@ def resumen_asistencia(club_id):
             UNIQUE(club_id, socio_id, fecha))""")
         cur.execute("""SELECT TO_CHAR(fecha,'YYYY-MM-DD'),
                               COUNT(*) FILTER (WHERE estado='presente') AS p,
+                              COUNT(*) FILTER (WHERE estado='ausente')  AS a,
                               COUNT(*) AS t
                        FROM asistencia WHERE club_id=%s
+                         AND estado != 'sin_registro'
                        GROUP BY fecha""", (club_id,))
-        rows = {r[0]: {"presentes": r[1], "total": r[2]} for r in cur.fetchall()}
+        rows = {r[0]: {"presentes": r[1], "ausentes": r[2], "total": r[3]}
+                for r in cur.fetchall()}
         release(conn); return jsonify(rows)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
