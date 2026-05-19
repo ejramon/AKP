@@ -189,19 +189,18 @@ def get_campos(plt_id):
 def get_historial(socio_id):
     try:
         conn = get_conn(); cur = conn.cursor()
-        cur.execute("""SELECT hr.id, hp.nombre AS plantilla,
-                              TO_CHAR(hr.creado_en,'DD/MM/YYYY') AS fecha
+        cur.execute("""SELECT hr.id, hp.nombre AS plantilla
                        FROM hist_registros hr
                        JOIN hist_plantillas hp ON hp.id=hr.plantilla_id
                        WHERE hr.socio_id=%s ORDER BY hr.id""", (socio_id,))
         registros=[]
-        for rid, plt_nombre, fecha in cur.fetchall():
+        for rid, plt_nombre in cur.fetchall():
             cur.execute("""SELECT hc.etiqueta, hv.valor, hc.tipo
                            FROM hist_valores hv
                            JOIN hist_campos hc ON hc.id=hv.campo_id
                            WHERE hv.registro_id=%s ORDER BY hc.orden""", (rid,))
             campos=[{"etiqueta":r[0],"valor":r[1],"tipo":r[2]} for r in cur.fetchall()]
-            registros.append({"id":rid,"plantilla":plt_nombre,"fecha":fecha,"campos":campos})
+            registros.append({"id":rid,"plantilla":plt_nombre,"campos":campos})
         release(conn); return jsonify(registros)
     except Exception as e:
         return jsonify({"error":str(e)}), 500
