@@ -5,226 +5,239 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AKP — Portal</title>
 <style>
-:root{--p:#1A3A6B;--pd:#0F2347;--a:#2563EB;--t:#1E293B;--ts:#64748B;--b:#CBD5E1;--f:#F0F4F8;--s:#fff;--ok:#16A34A;--err:#DC2626}
+:root{--p:#1A3A6B;--pd:#0F2347;--a:#2563EB;--t:#1E293B;--ts:#64748B;--b:#CBD5E1;--f:#F0F4F8;--s:#fff;--ok:#16A34A;--err:#DC2626;--warn:#D97706}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--f);color:var(--t);min-height:100vh}
-/* HEADER */
-header{background:var(--p);padding:14px 24px;display:flex;align-items:center;gap:12px;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.2);position:sticky;top:0;z-index:50}
-header h1{font-size:1.1rem;font-weight:700}
-header p{font-size:.75rem;opacity:.7;margin-top:2px}
-.btn-back{background:rgba(255,255,255,.15);border:none;color:#fff;padding:7px 14px;border-radius:8px;
-  cursor:pointer;font-family:inherit;font-size:.84rem;display:none;align-items:center;gap:6px}
+header{background:var(--p);padding:12px 20px;display:flex;align-items:center;gap:10px;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.2);position:sticky;top:0;z-index:50}
+#header-title{font-size:1rem;font-weight:700}
+#header-sub{font-size:.72rem;opacity:.65;margin-top:1px}
+.btn-back{background:rgba(255,255,255,.15);border:none;color:#fff;padding:6px 12px;border-radius:7px;cursor:pointer;font-family:inherit;font-size:.82rem;align-items:center;gap:5px;display:none}
 .btn-back:hover{background:rgba(255,255,255,.25)}
-/* SCREENS */
 .screen{display:none}.screen.active{display:block}
-.main{max-width:900px;margin:28px auto;padding:0 16px}
-/* SEC TITLE */
-.sec-title{font-size:.72rem;font-weight:700;color:var(--ts);text-transform:uppercase;
-  letter-spacing:.1em;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.main{max-width:960px;margin:22px auto;padding:0 16px}
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.sec-title{font-size:.72rem;font-weight:700;color:var(--ts);text-transform:uppercase;letter-spacing:.1em;flex:1;display:flex;align-items:center;gap:8px}
 .sec-title::after{content:'';flex:1;height:1px;background:var(--b)}
-/* CLUBS GRID */
-.clubs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
-.club-card{background:var(--s);border:1px solid var(--b);border-radius:14px;padding:18px 16px;
-  box-shadow:0 2px 8px rgba(0,0,0,.06);cursor:pointer;transition:all .15s;position:relative;overflow:hidden}
-.club-card:hover{border-color:var(--a);box-shadow:0 4px 16px rgba(37,99,235,.15);transform:translateY(-2px)}
+.clubs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.club-card{background:var(--s);border:1px solid var(--b);border-radius:14px;padding:16px;cursor:pointer;transition:all .15s;position:relative;overflow:hidden}
+.club-card:hover{border-color:var(--a);box-shadow:0 4px 14px rgba(37,99,235,.12);transform:translateY(-2px)}
 .club-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--a)}
-.club-icon{font-size:2rem;margin-bottom:8px}
-.club-nombre{font-size:.98rem;font-weight:700;color:var(--p);margin-bottom:3px}
-.club-meta{font-size:.76rem;color:var(--ts);margin-top:2px;display:flex;align-items:center;gap:4px}
-.club-estado{display:inline-block;margin-top:8px;padding:3px 9px;border-radius:10px;font-size:.68rem;font-weight:700}
-.activo{background:#DCFCE7;color:var(--ok)}.otro{background:#FEF3C7;color:#92400E}
-/* PÁGINA DEL CLUB */
-.club-hero{background:var(--p);padding:28px 24px;border-radius:14px;margin-bottom:24px;color:#fff;
-  display:flex;align-items:center;gap:16px}
-.club-hero-icon{width:60px;height:60px;border-radius:14px;background:rgba(255,255,255,.15);
-  display:flex;align-items:center;justify-content:center;font-size:1.8rem;flex-shrink:0}
-.club-hero h2{font-size:1.2rem;font-weight:700}
-.club-hero p{font-size:.82rem;opacity:.7;margin-top:4px}
-/* TABLA AFILIADOS */
-.tabla-wrap{background:var(--s);border:1px solid var(--b);border-radius:12px;overflow:hidden}
-.tabla-head{background:var(--p);display:grid;grid-template-columns:50px 1fr 1fr 120px 100px 90px;
-  padding:10px 14px;gap:8px}
-.tabla-head span{font-size:.68rem;font-weight:700;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.06em}
-.tabla-body{max-height:420px;overflow-y:auto}
-.tabla-fila{display:grid;grid-template-columns:50px 1fr 1fr 120px 100px 90px;
-  padding:10px 14px;gap:8px;border-bottom:1px solid var(--b);align-items:center}
-.tabla-fila:last-child{border-bottom:none}
-.tabla-fila:nth-child(even){background:var(--f)}
-.tabla-fila:hover{background:rgba(37,99,235,.05)}
-.tabla-fila span{font-size:.83rem;color:var(--t);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tabla-fila .sid{font-size:.75rem;color:var(--ts);font-weight:600}
-.tabla-empty{padding:40px;text-align:center;color:var(--ts);font-size:.88rem}
-/* BTN */
-.btn{background:var(--a);color:#fff;border:none;padding:10px 18px;border-radius:9px;
-  font-size:.88rem;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px}
-.btn:hover{opacity:.9}
-.btn:disabled{opacity:.5;cursor:not-allowed}
-/* MODAL */
-.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;
-  align-items:center;justify-content:center;padding:12px}
+.club-icon{font-size:1.8rem;margin-bottom:7px}
+.club-nombre{font-size:.93rem;font-weight:700;color:var(--p);margin-bottom:2px}
+.club-meta{font-size:.73rem;color:var(--ts);margin-top:1px}
+.badge{display:inline-block;margin-top:7px;padding:2px 9px;border-radius:10px;font-size:.67rem;font-weight:700}
+.activo{background:#DCFCE7;color:var(--ok)}.otro{background:#FEF3C7;color:var(--warn)}
+.club-hero{background:var(--p);padding:20px;border-radius:14px;margin-bottom:20px;color:#fff;display:flex;align-items:center;gap:14px}
+.club-hero-icon{width:50px;height:50px;border-radius:12px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0}
+.club-hero h2{font-size:1.05rem;font-weight:700}
+.club-hero p{font-size:.76rem;opacity:.7;margin-top:3px}
+.tabla-wrap{background:var(--s);border:1px solid var(--b);border-radius:12px;overflow:hidden;margin-bottom:18px}
+.t-head{background:var(--pd);display:grid;padding:9px 12px;gap:6px}
+.t-head span{font-size:.63rem;font-weight:700;color:rgba(255,255,255,.75);text-transform:uppercase;letter-spacing:.06em}
+.t-row{display:grid;padding:10px 12px;gap:6px;border-bottom:1px solid var(--b);align-items:center;cursor:pointer}
+.t-row:last-child{border-bottom:none}
+.t-row:nth-child(even){background:var(--f)}
+.t-row:hover{background:rgba(37,99,235,.06)}
+.t-row span{font-size:.81rem;color:var(--t);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cols7{grid-template-columns:40px 1fr 1fr 115px 105px 55px 90px}
+.t-empty{padding:36px;text-align:center;color:var(--ts);font-size:.86rem}
+.ficha-hero{background:var(--p);padding:20px;border-radius:14px;margin-bottom:18px;color:#fff;display:flex;align-items:center;gap:14px}
+.ficha-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:18px}
+.fdato{background:var(--s);border:1px solid var(--b);border-radius:10px;padding:10px 13px}
+.fdato .lbl{font-size:.65rem;font-weight:600;color:var(--ts);text-transform:uppercase;letter-spacing:.07em;margin-bottom:2px}
+.fdato .val{font-size:.87rem;color:var(--t);font-weight:500}
+.hist-card{background:var(--s);border:1px solid var(--b);border-radius:12px;margin-bottom:11px;overflow:hidden}
+.hist-hdr{background:var(--f);padding:9px 13px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--b)}
+.hist-hdr strong{font-size:.83rem;color:var(--p);font-weight:700}
+.hist-hdr span{font-size:.71rem;color:var(--ts)}
+.hist-body{padding:11px 13px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.hcampo .hl{font-size:.64rem;color:var(--ts);text-transform:uppercase;margin-bottom:1px;font-weight:600}
+.hcampo .hv{font-size:.8rem;color:var(--t)}
+.hcampo.full{grid-column:1/-1}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:12px}
 .modal-bg.open{display:flex}
-.modal{background:var(--s);border-radius:14px;width:min(580px,100%);max-height:92vh;overflow-y:auto;
-  box-shadow:0 20px 60px rgba(0,0,0,.25)}
-.mhdr{background:var(--p);padding:16px 22px;border-radius:14px 14px 0 0;
-  display:flex;justify-content:space-between;align-items:center;color:#fff}
-.mhdr h2{font-size:.95rem;font-weight:700}
-.mhdr p{font-size:.72rem;opacity:.65;margin-top:2px}
-.x{background:rgba(255,255,255,.15);border:none;color:#fff;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:.9rem}
-.mbody{padding:20px 22px}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.modal{background:var(--s);border-radius:14px;width:min(590px,100%);max-height:94vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.mhdr{background:var(--p);padding:14px 20px;border-radius:14px 14px 0 0;display:flex;justify-content:space-between;align-items:center;color:#fff}
+.mhdr h2{font-size:.9rem;font-weight:700}
+.mhdr p{font-size:.7rem;opacity:.65;margin-top:2px}
+.xbtn{background:rgba(255,255,255,.15);border:none;color:#fff;width:26px;height:26px;border-radius:6px;cursor:pointer;font-size:.87rem}
+.mbody{padding:16px 20px}
+.mfoot{display:flex;gap:8px;justify-content:flex-end;padding:11px 20px 16px;border-top:1px solid var(--b)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .full{grid-column:1/-1}
 .f{display:flex;flex-direction:column;gap:4px}
-.f label{font-size:.68rem;font-weight:600;color:var(--ts);text-transform:uppercase;letter-spacing:.07em}
-.f input,.f select{width:100%;padding:9px 11px;background:var(--f);border:1px solid var(--b);
-  border-radius:8px;font-size:.88rem;color:var(--t);font-family:inherit;outline:none}
-.f input:focus,.f select:focus{border-color:var(--a)}
-.sep{grid-column:1/-1;border:none;border-top:1px solid var(--b);margin:4px 0}
-.mfoot{display:flex;gap:8px;justify-content:flex-end;padding:14px 22px 20px;border-top:1px solid var(--b)}
-.btn-c{background:none;border:1px solid var(--b);color:var(--ts);padding:9px 16px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:.87rem}
+.f label{font-size:.66rem;font-weight:600;color:var(--ts);text-transform:uppercase;letter-spacing:.07em}
+.f input,.f select,.f textarea{width:100%;padding:8px 10px;background:var(--f);border:1px solid var(--b);border-radius:8px;font-size:.86rem;color:var(--t);font-family:inherit;outline:none;resize:vertical}
+.f input:focus,.f select:focus,.f textarea:focus{border-color:var(--a)}
+.sep{grid-column:1/-1;border:none;border-top:1px solid var(--b);margin:2px 0}
+.btn{background:var(--a);color:#fff;border:none;padding:9px 15px;border-radius:8px;font-size:.85rem;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:5px}
+.btn:hover{opacity:.9}.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-sm{padding:6px 11px;font-size:.76rem}
+.btn-c{background:none;border:1px solid var(--b);color:var(--ts);padding:8px 14px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:.83rem}
 .btn-c:hover{border-color:var(--err);color:var(--err)}
-/* TOAST */
-#toast{position:fixed;bottom:16px;right:16px;z-index:999;display:flex;flex-direction:column;gap:8px}
-.ti{padding:10px 14px;border-radius:9px;font-size:.84rem;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.18);max-width:300px}
+.edad-hint{margin-top:8px;font-size:.73rem;color:var(--ts);background:var(--f);padding:6px 10px;border-radius:7px;border-left:3px solid var(--a)}
+#toast{position:fixed;bottom:14px;right:14px;z-index:999;display:flex;flex-direction:column;gap:7px}
+.ti{padding:10px 14px;border-radius:9px;font-size:.82rem;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.18);max-width:300px}
 .tok{background:#DCFCE7;border:1px solid var(--ok);color:var(--ok)}
 .terr{background:#FEE2E2;border:1px solid var(--err);color:var(--err)}
-@media(max-width:500px){.grid2{grid-template-columns:1fr}.clubs-grid{grid-template-columns:1fr}
-  .tabla-head,.tabla-fila{grid-template-columns:40px 1fr 1fr;}.tabla-head span:nth-child(n+4),.tabla-fila span:nth-child(n+4){display:none}}
+@media(max-width:520px){
+  .grid2,.ficha-grid{grid-template-columns:1fr}
+  .clubs-grid{grid-template-columns:1fr}
+  .cols7{grid-template-columns:36px 1fr 1fr}
+  .cols7 span:nth-child(n+4){display:none}
+  .hist-body{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
 <header>
-  <button class="btn-back" id="btn-back" onclick="volverHome()">◀ Volver</button>
-  <div style="font-size:1.5rem">🥋</div>
-  <div><h1 id="header-title">AKP — Portal</h1><p id="header-sub">Base de datos de afiliados</p></div>
+  <button class="btn-back" id="btn-back" onclick="navBack()">◀ Volver</button>
+  <div style="font-size:1.4rem">🥋</div>
+  <div><div id="header-title">AKP — Portal</div><div id="header-sub">Base de datos de afiliados</div></div>
 </header>
 
-<!-- PANTALLA HOME -->
-<div class="screen active" id="screen-home">
+<!-- HOME -->
+<div class="screen active" id="s-home">
   <div class="main">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-      <div class="sec-title" style="flex:1;margin-bottom:0">🏫 Clubs</div>
-      <button class="btn" style="margin-left:16px" onclick="openModal('mb-club')">➕ Agregar Club</button>
+    <div class="sec-hdr">
+      <div class="sec-title">🏫 Clubs</div>
+      <button class="btn" onclick="openModal('m-club')">➕ Agregar Club</button>
     </div>
     <div class="clubs-grid" id="clubs-grid">
-      <div style="color:var(--ts);font-size:.85rem;padding:8px">Cargando clubs...</div>
+      <div style="color:var(--ts);font-size:.85rem;padding:8px">Cargando...</div>
     </div>
   </div>
 </div>
 
-<!-- PANTALLA CLUB -->
-<div class="screen" id="screen-club">
+<!-- CLUB -->
+<div class="screen" id="s-club">
   <div class="main">
     <div class="club-hero" id="club-hero">
       <div class="club-hero-icon">🏫</div>
-      <div>
-        <h2 id="club-hero-nombre">—</h2>
-        <p id="club-hero-meta">—</p>
-      </div>
+      <div><h2 id="ch-nombre">—</h2><p id="ch-meta">—</p></div>
     </div>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-      <div class="sec-title" style="flex:1;margin-bottom:0">👥 Afiliados del Club</div>
-      <button class="btn" onclick="openAfiliadoClub()">➕ Agregar Afiliado</button>
+    <div class="sec-hdr">
+      <div class="sec-title">👥 Afiliados</div>
+      <button class="btn" onclick="openAfiliadoNew()">➕ Agregar Afiliado</button>
     </div>
     <div class="tabla-wrap">
-      <div class="tabla-head">
+      <div class="t-head cols7">
         <span>ID</span><span>Nombres</span><span>Apellidos</span>
-        <span>Cédula</span><span>Categoría</span><span>Ciudad</span>
+        <span>Cédula</span><span>Categoría</span><span>Edad</span><span>Ciudad Res.</span>
       </div>
-      <div class="tabla-body" id="tabla-body">
-        <div class="tabla-empty">Cargando...</div>
-      </div>
+      <div id="tabla-body"><div class="t-empty">Cargando...</div></div>
     </div>
   </div>
 </div>
 
-<!-- MODAL AGREGAR CLUB -->
-<div class="modal-bg" id="mb-club" onclick="bgClick(event,'mb-club')">
+<!-- FICHA -->
+<div class="screen" id="s-ficha">
+  <div class="main">
+    <div class="ficha-hero" id="ficha-hero">
+      <div style="width:50px;height:50px;border-radius:12px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0">👤</div>
+      <div style="flex:1">
+        <h2 id="fh-nombre" style="font-size:1.05rem;font-weight:700">—</h2>
+        <p id="fh-meta" style="font-size:.76rem;opacity:.7;margin-top:3px">—</p>
+      </div>
+      <button class="btn btn-sm" style="background:rgba(255,255,255,.18);flex-shrink:0" onclick="openAfiliadoEdit()">✏️ Editar</button>
+    </div>
+    <div class="sec-hdr" style="margin-bottom:10px"><div class="sec-title">Datos personales</div></div>
+    <div class="ficha-grid" id="ficha-datos"></div>
+    <div class="sec-hdr" style="margin-top:18px">
+      <div class="sec-title">📋 Historial</div>
+      <button class="btn" onclick="openModal('m-hist')">➕ Agregar Registro</button>
+    </div>
+    <div id="historial-wrap"><div class="t-empty">Cargando...</div></div>
+  </div>
+</div>
+
+<!-- MODAL CLUB -->
+<div class="modal-bg" id="m-club" onclick="bgc(event,'m-club')">
   <div class="modal">
     <div class="mhdr">
       <div><h2>🏫 Agregar Club</h2><p>Datos del club y del responsable</p></div>
-      <button class="x" onclick="closeModal('mb-club')">✕</button>
+      <button class="xbtn" onclick="closeModal('m-club')">✕</button>
     </div>
     <div class="mbody">
       <div class="grid2">
-        <div class="f full"><label>Nombre del Club *</label>
-          <input id="c-nombre" placeholder="Ej: Dojo Quito Norte"></div>
-        <div class="f"><label>Ciudad</label>
-          <input id="c-ciudad" placeholder="Ej: Quito"></div>
+        <div class="f full"><label>Nombre del Club *</label><input id="c-nombre" placeholder="Ej: Dojo Quito Norte"></div>
+        <div class="f"><label>Ciudad</label><input id="c-ciudad" placeholder="Ej: Quito"></div>
         <div class="f"><label>Estado</label>
-          <select id="c-estado">
-            <option value="activo">Activo</option>
-            <option value="pendiente">Pendiente</option>
-            <option value="suspendido">Suspendido</option>
-          </select></div>
+          <select id="c-estado"><option value="activo">Activo</option><option value="pendiente">Pendiente</option></select></div>
         <hr class="sep">
-        <div class="f"><label>Nombres del Responsable *</label>
-          <input id="c-nombres" placeholder="Ej: Juan Carlos"></div>
-        <div class="f"><label>Apellidos del Responsable *</label>
-          <input id="c-apellidos" placeholder="Ej: González Ruiz"></div>
-        <div class="f"><label>Cédula del Responsable *</label>
-          <input id="c-cedula" inputmode="numeric" maxlength="20" placeholder="Ej: 1712345678"></div>
+        <div class="f"><label>Nombres Responsable *</label><input id="c-nomb"></div>
+        <div class="f"><label>Apellidos Responsable *</label><input id="c-apel"></div>
+        <div class="f"><label>Cédula Responsable *</label><input id="c-ced" inputmode="numeric" maxlength="20"></div>
       </div>
     </div>
     <div class="mfoot">
-      <button class="btn-c" onclick="closeModal('mb-club')">Cancelar</button>
+      <button class="btn-c" onclick="closeModal('m-club')">Cancelar</button>
       <button class="btn" id="btn-club" onclick="enviarClub()">💾 Guardar Club</button>
     </div>
   </div>
 </div>
 
-<!-- MODAL AGREGAR AFILIADO AL CLUB -->
-<div class="modal-bg" id="mb-afil" onclick="bgClick(event,'mb-afil')">
+<!-- MODAL AFILIADO -->
+<div class="modal-bg" id="m-afil" onclick="bgc(event,'m-afil')">
   <div class="modal">
     <div class="mhdr">
-      <div><h2>➕ Nuevo Afiliado</h2><p id="mb-afil-sub">—</p></div>
-      <button class="x" onclick="closeModal('mb-afil')">✕</button>
+      <div><h2 id="m-afil-title">➕ Nuevo Afiliado</h2><p id="m-afil-sub">—</p></div>
+      <button class="xbtn" onclick="closeModal('m-afil')">✕</button>
     </div>
     <div class="mbody">
       <div class="grid2">
-        <div class="f"><label>Nombres *</label>
-          <input id="a-nombres" placeholder="Ej: Juan Carlos"></div>
-        <div class="f"><label>Apellidos *</label>
-          <input id="a-apellidos" placeholder="Ej: González Ruiz"></div>
-        <div class="f"><label>Cédula *</label>
-          <input id="a-cedula" inputmode="numeric" maxlength="20"></div>
-        <div class="f"><label>Teléfono *</label>
-          <input id="a-telefono" placeholder="Ej: 0991234567"></div>
-        <div class="f full"><label>Dirección *</label>
-          <input id="a-direccion"></div>
-        <div class="f full"><label>Correo Electrónico *</label>
-          <input id="a-correo" type="email"></div>
-        <div class="f"><label>Ciudad de Nacimiento *</label>
-          <input id="a-ciudad-nac"></div>
-        <div class="f"><label>Ciudad de Residencia *</label>
-          <input id="a-ciudad-res"></div>
-        <div class="f"><label>Fecha de Nacimiento *</label>
-          <input id="a-fnac" type="date" oninput="calcEdad()"></div>
-        <div class="f"><label>Fecha de Ingreso *</label>
-          <input id="a-fing" type="date"></div>
+        <div class="f"><label>Nombres *</label><input id="a-nomb" placeholder="Ej: Juan Carlos"></div>
+        <div class="f"><label>Apellidos *</label><input id="a-apel" placeholder="Ej: González"></div>
+        <div class="f"><label>Cédula *</label><input id="a-ced" inputmode="numeric" maxlength="20"></div>
+        <div class="f"><label>Teléfono *</label><input id="a-tel"></div>
+        <div class="f full"><label>Dirección *</label><input id="a-dir"></div>
+        <div class="f full"><label>Correo *</label><input id="a-cor" type="email"></div>
+        <div class="f"><label>Ciudad Nacimiento *</label><input id="a-cnac"></div>
+        <div class="f"><label>Ciudad Residencia *</label><input id="a-cres"></div>
+        <div class="f"><label>Fecha Nacimiento *</label><input id="a-fnac" type="date" oninput="calcEdad()"></div>
+        <div class="f"><label>Fecha Ingreso *</label><input id="a-fing" type="date"></div>
         <div class="f"><label>Categoría *</label>
           <select id="a-cat"><option value="">— Seleccioná —</option></select></div>
         <div class="f"><label>Género *</label>
-          <select id="a-gen">
-            <option value="">— Seleccioná —</option>
-            <option value="Hombre">Hombre</option>
-            <option value="Mujer">Mujer</option>
-          </select></div>
+          <select id="a-gen"><option value="">— Seleccioná —</option>
+            <option value="Hombre">Hombre</option><option value="Mujer">Mujer</option></select></div>
       </div>
-      <div id="edad-hint" hidden style="margin-top:10px;font-size:.76rem;color:var(--ts);
-        background:var(--f);padding:7px 11px;border-radius:7px;border-left:3px solid var(--a)">
-        🎂 Edad calculada: <strong id="edad-val">—</strong> años
-      </div>
+      <div class="edad-hint" id="edad-hint" hidden>🎂 Edad calculada: <strong id="edad-val">—</strong> años</div>
     </div>
     <div class="mfoot">
-      <button class="btn-c" onclick="closeModal('mb-afil')">Cancelar</button>
-      <button class="btn" id="btn-afil" onclick="enviarAfiliado()">✅ Registrar Afiliado</button>
+      <button class="btn-c" onclick="closeModal('m-afil')">Cancelar</button>
+      <button class="btn" id="btn-afil" onclick="enviarAfiliado()">✅ Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL HISTORIAL -->
+<div class="modal-bg" id="m-hist" onclick="bgc(event,'m-hist')">
+  <div class="modal">
+    <div class="mhdr">
+      <div><h2>📋 Agregar Registro</h2><p id="m-hist-sub">Elegí una plantilla</p></div>
+      <button class="xbtn" onclick="closeModal('m-hist')">✕</button>
+    </div>
+    <div class="mbody">
+      <div class="f" style="margin-bottom:14px">
+        <label>Plantilla</label>
+        <select id="h-plt" onchange="cargarCamposPlantilla()">
+          <option value="">— Elegí una plantilla —</option>
+        </select>
+      </div>
+      <div id="h-campos"></div>
+    </div>
+    <div class="mfoot">
+      <button class="btn-c" onclick="closeModal('m-hist')">Cancelar</button>
+      <button class="btn" id="btn-hist" onclick="enviarHistorial()" disabled>💾 Guardar Registro</button>
     </div>
   </div>
 </div>
 
 <div id="toast"></div>
 <script>
-let CLUBS=[], CATS=[], CLUB_ACTIVO=null;
+let CLUBS=[],CATS=[],PLTS=[],H_CAMPOS=[];
+let CLUB_ACTIVO=null,AFILIADO_ACTIVO=null,EDITANDO_ID=null;
 const g=id=>document.getElementById(id);
 const v=id=>g(id)?.value?.trim()||'';
 const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -233,84 +246,164 @@ function toast(msg,tipo,ms=4000){
   const d=document.createElement('div');d.className=`ti t${tipo}`;d.textContent=msg;
   g('toast').appendChild(d);setTimeout(()=>d.remove(),ms);
 }
-function bgClick(e,id){if(e.target===g(id))closeModal(id);}
+function bgc(e,id){if(e.target===g(id))closeModal(id);}
 function openModal(id){g(id).classList.add('open');}
 function closeModal(id){
   g(id).classList.remove('open');
-  g(id).querySelectorAll('input').forEach(e=>e.value='');
-  g(id).querySelectorAll('select').forEach(e=>e.selectedIndex=0);
-  g('edad-hint').hidden=true;
+  if(id==='m-afil'){
+    g(id).querySelectorAll('input').forEach(e=>e.value='');
+    g(id).querySelectorAll('select').forEach(e=>e.selectedIndex=0);
+    g('edad-hint').hidden=true;EDITANDO_ID=null;
+  }
+  if(id==='m-hist'){g('h-plt').selectedIndex=0;g('h-campos').innerHTML='';g('btn-hist').disabled=true;}
 }
 
-// ── Navegación ─────────────────────────────────────────────────────────────
-function mostrarScreen(id){
+// Navegación SPA
+const STACK=[];
+function goScreen(id,titulo,sub,onback){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  g(id).classList.add('active');
-  const enClub = id==='screen-club';
-  g('btn-back').style.display = enClub?'inline-flex':'none';
+  g(`s-${id}`).classList.add('active');
+  g('header-title').textContent=titulo||'AKP — Portal';
+  g('header-sub').textContent=sub||'';
+  STACK.push(onback||null);
+  g('btn-back').style.display='inline-flex';
 }
-function volverHome(){mostrarScreen('screen-home');}
+function navBack(){
+  STACK.pop();
+  const fn=STACK[STACK.length-1];
+  if(fn){fn();}
+  else{
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    g('s-home').classList.add('active');
+    g('header-title').textContent='AKP — Portal';
+    g('header-sub').textContent='Base de datos de afiliados';
+    STACK.length=0;g('btn-back').style.display='none';
+  }
+}
 
-// ── Cargar datos ────────────────────────────────────────────────────────────
 async function cargarTodo(){
-  const [rc,rk]=await Promise.all([fetch('/api/categorias'),fetch('/api/clubs')]);
+  const[rc,rk,rp]=await Promise.all([fetch('/api/categorias'),fetch('/api/clubs'),fetch('/api/plantillas')]);
   if(rc.ok) CATS=await rc.json();
   if(rk.ok) CLUBS=await rk.json();
+  if(rp.ok) PLTS=await rp.json();
   renderClubs();
+  // Categorías
   const sel=g('a-cat');sel.innerHTML='<option value="">— Seleccioná —</option>';
   CATS.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
+  // Plantillas
+  const sp=g('h-plt');sp.innerHTML='<option value="">— Elegí una plantilla —</option>';
+  PLTS.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.nombre;sp.appendChild(o);});
 }
 
 function renderClubs(){
-  const grid=g('clubs-grid');
-  if(!CLUBS.length){grid.innerHTML='<div style="color:var(--ts);font-size:.85rem;padding:12px">No hay clubs registrados aún.</div>';return;}
-  grid.innerHTML=CLUBS.map(c=>`
+  const gr=g('clubs-grid');
+  if(!CLUBS.length){gr.innerHTML='<div style="color:var(--ts);font-size:.85rem;padding:8px">No hay clubs registrados.</div>';return;}
+  gr.innerHTML=CLUBS.map(c=>`
     <div class="club-card" onclick="abrirClub(${c.id})">
       <div class="club-icon">🏫</div>
       <div class="club-nombre">${esc(c.nombre)}</div>
       <div class="club-meta">📍 ${esc(c.ciudad||'—')}</div>
       <div class="club-meta">👤 ${esc(c.nombres_dueno)} ${esc(c.apellidos_dueno)}</div>
-      <span class="club-estado ${c.estado==='activo'?'activo':'otro'}">${esc(c.estado)}</span>
+      <span class="badge ${c.estado==='activo'?'activo':'otro'}">${esc(c.estado)}</span>
     </div>`).join('');
 }
 
-// ── Abrir página del club ──────────────────────────────────────────────────
 async function abrirClub(club_id){
-  CLUB_ACTIVO = CLUBS.find(c=>c.id===club_id);
-  if(!CLUB_ACTIVO) return;
-  g('club-hero-nombre').textContent = CLUB_ACTIVO.nombre;
-  g('club-hero-meta').textContent = `📍 ${CLUB_ACTIVO.ciudad||'—'}  ·  👤 ${CLUB_ACTIVO.nombres_dueno} ${CLUB_ACTIVO.apellidos_dueno}`;
-  g('header-title').textContent = CLUB_ACTIVO.nombre;
-  g('header-sub').textContent = 'Afiliados del club';
-  mostrarScreen('screen-club');
+  CLUB_ACTIVO=CLUBS.find(c=>c.id===club_id);
+  if(!CLUB_ACTIVO)return;
+  g('ch-nombre').textContent=CLUB_ACTIVO.nombre;
+  g('ch-meta').textContent=`📍 ${CLUB_ACTIVO.ciudad||'—'}  ·  👤 ${CLUB_ACTIVO.nombres_dueno} ${CLUB_ACTIVO.apellidos_dueno}`;
+  goScreen('club',CLUB_ACTIVO.nombre,'Afiliados del club',()=>{
+    goScreen('club',CLUB_ACTIVO.nombre,'Afiliados del club');
+    cargarAfiliados(CLUB_ACTIVO.id);
+  });
   cargarAfiliados(club_id);
 }
 
 async function cargarAfiliados(club_id){
-  const body = g('tabla-body');
-  body.innerHTML='<div class="tabla-empty">Cargando...</div>';
+  const body=g('tabla-body');
+  body.innerHTML='<div class="t-empty">Cargando...</div>';
   try{
     const r=await fetch(`/api/clubs/${club_id}/afiliados`);
     const data=await r.json();
-    if(!r.ok){body.innerHTML=`<div class="tabla-empty">Error: ${esc(data.error)}</div>`;return;}
-    if(!data.length){body.innerHTML='<div class="tabla-empty">Sin afiliados en este club aún.</div>';return;}
-    body.innerHTML=data.map((m,i)=>`
-      <div class="tabla-fila">
-        <span class="sid">#${m.id}</span>
-        <span>${esc(m.nombres)}</span>
-        <span>${esc(m.apellidos)}</span>
-        <span>${esc(m.cedula)}</span>
-        <span>${esc(m.categoria||'—')}</span>
-        <span>${esc(m.ciudad_residencia||'—')}</span>
+    if(!r.ok){body.innerHTML=`<div class="t-empty">Error: ${esc(data.error)}</div>`;return;}
+    if(!data.length){body.innerHTML='<div class="t-empty">Sin afiliados en este club aún.</div>';return;}
+    body.innerHTML=data.map(m=>`
+      <div class="t-row cols7" onclick='abrirFicha(${JSON.stringify(m)})'>
+        <span style="font-size:.71rem;color:var(--ts);font-weight:600">#${m.id}</span>
+        <span>${esc(m.nombres)}</span><span>${esc(m.apellidos)}</span>
+        <span>${esc(m.cedula)}</span><span>${esc(m.categoria||'—')}</span>
+        <span>${m.edad||'—'}</span><span>${esc(m.ciudad_residencia||'—')}</span>
       </div>`).join('');
-  }catch(e){body.innerHTML='<div class="tabla-empty">Error de conexión.</div>';}
+  }catch(e){body.innerHTML='<div class="t-empty">Error de conexión.</div>';}
 }
 
-function openAfiliadoClub(){
-  if(!CLUB_ACTIVO) return;
-  g('mb-afil-sub').textContent=`Agregar a: ${CLUB_ACTIVO.nombre}`;
+function abrirFicha(m){
+  if(typeof m==='string') m=JSON.parse(m);
+  AFILIADO_ACTIVO=m;
+  g('fh-nombre').textContent=`${m.nombres} ${m.apellidos}`;
+  g('fh-meta').textContent=`${m.categoria||'—'}  ·  Cédula: ${m.cedula}  ·  ${m.edad||'—'} años`;
+  const datos=[['Nombres',m.nombres],['Apellidos',m.apellidos],['Cédula',m.cedula],
+    ['Teléfono',m.telefono||'—'],['Correo',m.correo||'—'],['Género',m.genero||'—'],
+    ['Ciudad Nac.',m.ciudad_nacimiento||'—'],['Ciudad Res.',m.ciudad_residencia||'—'],
+    ['Fecha Nac.',m.fecha_nacimiento||'—'],['Fecha Ing.',m.fecha_ingreso||'—'],
+    ['Categoría',m.categoria||'—'],['Edad',`${m.edad||'—'} años`]];
+  g('ficha-datos').innerHTML=datos.map(([l,v])=>`
+    <div class="fdato"><div class="lbl">${esc(l)}</div><div class="val">${esc(String(v))}</div></div>`).join('');
+  goScreen('ficha',`${m.nombres} ${m.apellidos}`,CLUB_ACTIVO?.nombre||'',()=>{
+    goScreen('ficha',`${m.nombres} ${m.apellidos}`,CLUB_ACTIVO?.nombre||'');
+    cargarHistorial(m.id);
+  });
+  cargarHistorial(m.id);
+}
+
+async function cargarHistorial(socio_id){
+  const wrap=g('historial-wrap');
+  wrap.innerHTML='<div class="t-empty">Cargando historial...</div>';
+  try{
+    const r=await fetch(`/api/afiliados/${socio_id}/historial`);
+    const data=await r.json();
+    if(!r.ok){wrap.innerHTML=`<div class="t-empty">Error: ${esc(data.error)}</div>`;return;}
+    if(!data.length){wrap.innerHTML='<div class="t-empty">Sin registros de historial aún.</div>';return;}
+    wrap.innerHTML=data.map(reg=>`
+      <div class="hist-card">
+        <div class="hist-hdr">
+          <strong>📋 ${esc(reg.plantilla)}</strong>
+          <span>${esc(reg.fecha)}</span>
+        </div>
+        <div class="hist-body">
+          ${reg.campos.map(c=>`
+            <div class="hcampo ${c.tipo==='redaccion'?'full':''}">
+              <div class="hl">${esc(c.etiqueta)}</div>
+              <div class="hv" style="${c.tipo==='redaccion'?'white-space:pre-wrap':''}">${esc(c.valor||'—')}</div>
+            </div>`).join('')}
+        </div>
+      </div>`).join('');
+  }catch(e){wrap.innerHTML='<div class="t-empty">Error de conexión.</div>';}
+}
+
+function openAfiliadoNew(){
+  EDITANDO_ID=null;
+  g('m-afil-title').textContent='➕ Nuevo Afiliado';
+  g('m-afil-sub').textContent=`Agregar a: ${CLUB_ACTIVO?.nombre||'—'}`;
   g('a-fing').value=new Date().toISOString().split('T')[0];
-  openModal('mb-afil');
+  openModal('m-afil');
+}
+
+function openAfiliadoEdit(){
+  if(!AFILIADO_ACTIVO)return;
+  EDITANDO_ID=AFILIADO_ACTIVO.id;
+  g('m-afil-title').textContent='✏️ Editar Afiliado';
+  g('m-afil-sub').textContent=`${AFILIADO_ACTIVO.nombres} ${AFILIADO_ACTIVO.apellidos}`;
+  const m=AFILIADO_ACTIVO;
+  const toISO=s=>{if(!s||!s.includes('/'))return s||'';const[d,mo,y]=s.split('/');return`${y}-${mo}-${d}`;};
+  g('a-nomb').value=m.nombres||''; g('a-apel').value=m.apellidos||'';
+  g('a-ced').value=m.cedula||'';   g('a-tel').value=m.telefono||'';
+  g('a-dir').value=m.direccion||'';g('a-cor').value=m.correo||'';
+  g('a-cnac').value=m.ciudad_nacimiento||''; g('a-cres').value=m.ciudad_residencia||'';
+  g('a-fnac').value=toISO(m.fecha_nacimiento); g('a-fing').value=toISO(m.fecha_ingreso);
+  g('a-cat').value=m.categoria||''; g('a-gen').value=m.genero||'';
+  openModal('m-afil');
 }
 
 function calcEdad(){
@@ -321,44 +414,76 @@ function calcEdad(){
   g('edad-val').textContent=a;g('edad-hint').hidden=false;
 }
 
-// ── Enviar Club ─────────────────────────────────────────────────────────────
+async function enviarAfiliado(){
+  const req=['a-nomb','a-apel','a-ced','a-tel','a-dir','a-cor','a-cnac','a-cres','a-fnac','a-fing','a-cat','a-gen'];
+  if(req.some(id=>!v(id))){toast('⚠️ Completá todos los campos.','err');return;}
+  const payload={nombres:v('a-nomb'),apellidos:v('a-apel'),cedula:v('a-ced'),
+    telefono:v('a-tel'),direccion:v('a-dir'),correo:v('a-cor'),
+    ciudad_nacimiento:v('a-cnac'),ciudad_residencia:v('a-cres'),
+    fecha_nacimiento:g('a-fnac').value,fecha_ingreso:g('a-fing').value,
+    categoria:v('a-cat'),genero:v('a-gen'),club_id:CLUB_ACTIVO?.id||null};
+  const btn=g('btn-afil');btn.disabled=true;btn.textContent='Guardando...';
+  try{
+    const url=EDITANDO_ID?`/api/afiliados/${EDITANDO_ID}`:'/api/registrar';
+    const method=EDITANDO_ID?'PUT':'POST';
+    const r=await fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const res=await r.json();
+    if(r.ok){
+      toast(`✅ ${res.mensaje}`,'ok');closeModal('m-afil');
+      if(EDITANDO_ID){AFILIADO_ACTIVO={...AFILIADO_ACTIVO,...payload};abrirFicha(AFILIADO_ACTIVO);}
+      else cargarAfiliados(CLUB_ACTIVO.id);
+    }else toast(`❌ ${res.error}`,'err');
+  }catch(e){toast('❌ Error de conexión.','err');}
+  finally{btn.disabled=false;btn.textContent='✅ Guardar';}
+}
+
+async function cargarCamposPlantilla(){
+  const pid=g('h-plt').value;
+  const wrap=g('h-campos');const btn=g('btn-hist');
+  if(!pid){wrap.innerHTML='';btn.disabled=true;return;}
+  try{
+    const r=await fetch(`/api/plantillas/${pid}/campos`);
+    H_CAMPOS=await r.json();
+    wrap.innerHTML=`<div class="grid2">${H_CAMPOS.map(c=>`
+      <div class="f ${c.tipo==='redaccion'?'full':''}">
+        <label>${esc(c.etiqueta)}</label>
+        ${c.tipo==='fecha'?`<input type="date" id="hc-${c.id}">`:
+          c.tipo==='redaccion'?`<textarea id="hc-${c.id}" rows="4" maxlength="200" placeholder="Máx 200 caracteres"></textarea>`:
+          `<input id="hc-${c.id}" type="text">`}
+      </div>`).join('')}</div>`;
+    btn.disabled=false;
+  }catch(e){wrap.innerHTML='<div class="t-empty">Error al cargar campos.</div>';}
+}
+
+async function enviarHistorial(){
+  if(!AFILIADO_ACTIVO||!g('h-plt').value)return;
+  const plt_id=parseInt(g('h-plt').value);
+  const valores={};
+  H_CAMPOS.forEach(c=>{const el=g(`hc-${c.id}`);if(el)valores[c.id]=el.value.trim();});
+  const btn=g('btn-hist');btn.disabled=true;btn.textContent='Guardando...';
+  try{
+    const r=await fetch(`/api/afiliados/${AFILIADO_ACTIVO.id}/historial`,
+      {method:'POST',headers:{'Content-Type':'application/json'},
+       body:JSON.stringify({plantilla_id:plt_id,valores})});
+    const res=await r.json();
+    if(r.ok){toast('✅ Registro guardado.','ok');closeModal('m-hist');cargarHistorial(AFILIADO_ACTIVO.id);}
+    else toast(`❌ ${res.error}`,'err');
+  }catch(e){toast('❌ Error de conexión.','err');}
+  finally{btn.disabled=false;btn.textContent='💾 Guardar Registro';}
+}
+
 async function enviarClub(){
-  if(!v('c-nombre')||!v('c-nombres')||!v('c-apellidos')||!v('c-cedula')){
-    toast('⚠️ Completá los campos obligatorios.','err');return;}
+  if(!v('c-nombre')||!v('c-nomb')||!v('c-apel')||!v('c-ced')){toast('⚠️ Completá los campos obligatorios.','err');return;}
   const btn=g('btn-club');btn.disabled=true;btn.textContent='Guardando...';
   try{
     const r=await fetch('/api/clubs',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({nombre:v('c-nombre'),ciudad:v('c-ciudad'),estado:v('c-estado'),
-        nombres_dueno:v('c-nombres'),apellidos_dueno:v('c-apellidos'),cedula_dueno:v('c-cedula')})});
+        nombres_dueno:v('c-nomb'),apellidos_dueno:v('c-apel'),cedula_dueno:v('c-ced')})});
     const res=await r.json();
-    if(r.ok){toast('✅ '+res.mensaje,'ok');closeModal('mb-club');CLUBS=res.clubs||[];renderClubs();}
+    if(r.ok){toast('✅ '+res.mensaje,'ok');closeModal('m-club');CLUBS=res.clubs||[];renderClubs();}
     else toast('❌ '+res.error,'err');
   }catch(e){toast('❌ Error de conexión.','err');}
   finally{btn.disabled=false;btn.textContent='💾 Guardar Club';}
-}
-
-// ── Enviar Afiliado ─────────────────────────────────────────────────────────
-async function enviarAfiliado(){
-  const req=['a-nombres','a-apellidos','a-cedula','a-telefono','a-direccion',
-             'a-correo','a-ciudad-nac','a-ciudad-res','a-fnac','a-fing','a-cat','a-gen'];
-  if(req.some(id=>!v(id))){toast('⚠️ Completá todos los campos.','err');return;}
-  const btn=g('btn-afil');btn.disabled=true;btn.textContent='Registrando...';
-  try{
-    const r=await fetch('/api/registrar',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({nombres:v('a-nombres'),apellidos:v('a-apellidos'),cedula:v('a-cedula'),
-        telefono:v('a-telefono'),direccion:v('a-direccion'),correo:v('a-correo'),
-        ciudad_nacimiento:v('a-ciudad-nac'),ciudad_residencia:v('a-ciudad-res'),
-        fecha_nacimiento:g('a-fnac').value,fecha_ingreso:g('a-fing').value,
-        categoria:v('a-cat'),genero:v('a-gen'),
-        club_id:CLUB_ACTIVO?.id||null})});
-    const res=await r.json();
-    if(r.ok){
-      toast('✅ '+res.mensaje,'ok');
-      closeModal('mb-afil');
-      cargarAfiliados(CLUB_ACTIVO.id);
-    }else toast('❌ '+res.error,'err');
-  }catch(e){toast('❌ Error de conexión.','err');}
-  finally{btn.disabled=false;btn.textContent='✅ Registrar Afiliado';}
 }
 
 cargarTodo();
