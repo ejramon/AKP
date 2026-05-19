@@ -75,11 +75,52 @@ header{background:var(--p);padding:12px 20px;display:flex;align-items:center;gap
 .btn-sm{padding:6px 11px;font-size:.76rem}
 .btn-c{background:none;border:1px solid var(--b);color:var(--ts);padding:8px 14px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:.83rem}
 .btn-c:hover{border-color:var(--err);color:var(--err)}
+.btn-green{background:#16A34A}
 .edad-hint{margin-top:8px;font-size:.73rem;color:var(--ts);background:var(--f);padding:6px 10px;border-radius:7px;border-left:3px solid var(--a)}
 #toast{position:fixed;bottom:14px;right:14px;z-index:999;display:flex;flex-direction:column;gap:7px}
 .ti{padding:10px 14px;border-radius:9px;font-size:.82rem;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.18);max-width:300px}
 .tok{background:#DCFCE7;border:1px solid var(--ok);color:var(--ok)}
 .terr{background:#FEE2E2;border:1px solid var(--err);color:var(--err)}
+
+/* ── Calendario de asistencia ── */
+.asist-layout{display:grid;grid-template-columns:340px 1fr;gap:18px;align-items:start}
+.cal-wrap{background:var(--s);border:1px solid var(--b);border-radius:14px;padding:14px;user-select:none}
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.cal-nav span{font-size:.88rem;font-weight:700;color:var(--p)}
+.cal-nav button{background:none;border:1px solid var(--b);color:var(--ts);width:28px;height:28px;border-radius:7px;cursor:pointer;font-size:.9rem;display:flex;align-items:center;justify-content:center}
+.cal-nav button:hover{border-color:var(--a);color:var(--a)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-dow{font-size:.6rem;font-weight:700;color:var(--ts);text-align:center;padding:3px 0;text-transform:uppercase}
+.cal-day{aspect-ratio:1;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:2px solid transparent;transition:all .12s;position:relative;font-size:.8rem;font-weight:600;color:var(--t);background:var(--f)}
+.cal-day:hover{border-color:var(--a);color:var(--a)}
+.cal-day.empty{background:transparent;cursor:default;pointer-events:none}
+.cal-day.today{border-color:var(--a)!important;color:var(--a)}
+.cal-day.selected{background:var(--a);color:#fff;border-color:var(--a)}
+.cal-day.selected:hover{background:var(--pd)}
+.cal-day.has-data .dot{width:5px;height:5px;border-radius:50%;background:var(--ok);position:absolute;bottom:3px}
+.cal-day.selected .dot{background:#fff}
+.lista-asist{background:var(--s);border:1px solid var(--b);border-radius:14px;overflow:hidden}
+.asist-fecha-hdr{background:var(--pd);padding:12px 16px;color:#fff;font-size:.85rem;font-weight:700}
+.asist-row{display:grid;grid-template-columns:1fr auto;align-items:center;padding:10px 16px;border-bottom:1px solid var(--b);gap:10px}
+.asist-row:last-child{border-bottom:none}
+.asist-row:nth-child(even){background:var(--f)}
+.asist-nombre{font-size:.83rem;font-weight:600;color:var(--t)}
+.asist-cat{font-size:.7rem;color:var(--ts)}
+.asist-btns{display:flex;gap:5px}
+.ab{border:none;border-radius:6px;padding:5px 10px;font-size:.73rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .1s;opacity:.45}
+.ab:hover{opacity:.8}
+.ab.active{opacity:1;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.ab-p{background:#DCFCE7;color:var(--ok)}
+.ab-a{background:#FEE2E2;color:var(--err)}
+.ab-s{background:#F1F5F9;color:var(--ts)}
+.asist-footer{padding:12px 16px;border-top:1px solid var(--b);display:flex;justify-content:space-between;align-items:center;background:var(--f)}
+.asist-resumen{font-size:.76rem;color:var(--ts)}
+.asist-placeholder{padding:48px 24px;text-align:center;color:var(--ts);font-size:.86rem}
+
+@media(max-width:680px){
+  .asist-layout{grid-template-columns:1fr}
+  .cal-day{font-size:.72rem}
+}
 @media(max-width:520px){
   .grid2,.ficha-grid{grid-template-columns:1fr}
   .clubs-grid{grid-template-columns:1fr}
