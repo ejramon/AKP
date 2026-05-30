@@ -90,9 +90,9 @@ def get_clubs():
     try:
         conn = get_conn(); cur = conn.cursor()
         cur.execute("""SELECT id,nombre,ciudad,estado,
-                              nombres_dueno,apellidos_dueno,cedula_dueno
+                              nombres_dueno,apellidos_dueno,cedula_dueno,token
                        FROM clubs ORDER BY nombre""")
-        cols=["id","nombre","ciudad","estado","nombres_dueno","apellidos_dueno","cedula_dueno"]
+        cols=["id","nombre","ciudad","estado","nombres_dueno","apellidos_dueno","cedula_dueno","token"]
         clubs=[dict(zip(cols,r)) for r in cur.fetchall()]
         return jsonify(clubs)
     except Exception as e:
@@ -170,12 +170,12 @@ def mi_club(token):
     try:
         conn = get_conn(); cur = conn.cursor()
         cur.execute("""SELECT id,nombre,ciudad,estado,
-                              nombres_dueno,apellidos_dueno,cedula_dueno
+                              nombres_dueno,apellidos_dueno,cedula_dueno,token
                        FROM clubs WHERE token=%s""", (token,))
         row = cur.fetchone()
         if not row:
             return jsonify({"error": "Token inválido"}), 404
-        cols = ["id","nombre","ciudad","estado","nombres_dueno","apellidos_dueno","cedula_dueno"]
+        cols = ["id","nombre","ciudad","estado","nombres_dueno","apellidos_dueno","cedula_dueno","token"]
         return jsonify(dict(zip(cols, row)))
     except Exception as e:
         logger.error("mi_club: %s", e)
