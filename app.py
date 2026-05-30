@@ -3,6 +3,7 @@ from datetime import datetime
 from flask import Flask, request, jsonify, send_from_directory
 import psycopg2
 from psycopg2 import pool as pg_pool
+from psycopg2.extras import execute_values
 
 logging.basicConfig(
     level=logging.INFO,
@@ -12,13 +13,17 @@ logger = logging.getLogger("akp")
 
 app = Flask(__name__, static_folder="static", static_url_path="")
 DATABASE_URL = os.environ.get("DATABASE_URL_MIEMBROS", os.environ.get("DATABASE_URL", ""))
+# Tamaño del pool configurable por variable de entorno.
+# Plan básico Railway (~20-25 conexiones totales): dejar en 10 da margen.
+# Cuando escales a 400 clubes + plan mayor de Railway: subir POOL_MAX a 20.
+POOL_MAX = int(os.environ.get("POOL_MAX", 10))
 _pool = None
 
 def _crear_pool():
     # keepalives: si Railway reinicia la DB, las conexiones muertas se detectan
     # y se descartan en vez de quedar colgadas.
     return pg_pool.SimpleConnectionPool(
-        1, 5, DATABASE_URL,
+        1, POOL_MAX, DATABASE_URL,
         keepalives=1,
         keepalives_idle=30,
         keepalives_interval=10,
@@ -332,14 +337,20 @@ def guardar_asistencia(club_id):
     conn = None
     try:
         conn = get_conn(); cur = conn.cursor()
-        for reg in registros:
-            sid   = int(reg["socio_id"])
-            estado = reg.get("estado", "sin_registro")
-            cur.execute("""INSERT INTO asistencia (club_id, socio_id, fecha, estado)
-                           VALUES (%s,%s,%s,%s)
-                           ON CONFLICT (club_id, socio_id, fecha)
-                           DO UPDATE SET estado=EXCLUDED.estado""",
-                        (club_id, sid, fecha, estado))
+        # ── INSERT masivo: una sola query para TODOS los registros del club ──
+        # Antes era un INSERT por deportista (bucle). Con clubes grandes en hora
+        # pico eso ocupaba la conexión cientos de ms. Ahora es un solo round-trip.
+        filas = [
+            (club_id, int(reg["socio_id"]), fecha, reg.get("estado", "sin_registro"))
+            for reg in registros
+        ]
+        if filas:
+            execute_values(cur,
+                """INSERT INTO asistencia (club_id, socio_id, fecha, estado)
+                   VALUES %s
+                   ON CONFLICT (club_id, socio_id, fecha)
+                   DO UPDATE SET estado=EXCLUDED.estado""",
+                filas)
         conn.commit()
         return jsonify({"ok": True, "mensaje": f"Asistencia guardada para {fecha}."})
     except Exception as e:
