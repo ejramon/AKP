@@ -64,6 +64,10 @@ def parse_fecha(s):
 def index():
     return send_from_directory("static", "index.html")
 
+@app.route("/panel")
+def panel():
+    return send_from_directory("static", "panel.html")
+
 # ── Categorías ─────────────────────────────────────────────────────────────
 @app.route("/api/categorias")
 def categorias():
@@ -131,7 +135,34 @@ def crear_club():
     finally:
         release(conn)
 
-# ── Club por token (acceso individual sin login) ───────────────────────────
+# ── Editar club (excepto nombre) ───────────────────────────────────────────
+@app.route("/api/clubs/<int:club_id>", methods=["PUT"])
+def editar_club(club_id):
+    d = request.get_json(force=True) or {}
+    req = ["nombres_dueno","apellidos_dueno","cedula_dueno"]
+    vacios = [c for c in req if not str(d.get(c,"")).strip()]
+    if vacios: return jsonify({"error":f"Faltan: {', '.join(vacios)}"}), 400
+    conn = None
+    try:
+        conn = get_conn(); cur = conn.cursor()
+        cur.execute("""UPDATE clubs SET
+            ciudad=%s, estado=%s,
+            nombres_dueno=%s, apellidos_dueno=%s, cedula_dueno=%s
+            WHERE id=%s""",
+            (d.get("ciudad","").strip(), d.get("estado","activo"),
+             d["nombres_dueno"].strip(), d["apellidos_dueno"].strip(),
+             d["cedula_dueno"].strip(), club_id))
+        conn.commit()
+        return jsonify({"ok": True, "mensaje": "Club actualizado."})
+    except Exception as e:
+        try: conn.rollback()
+        except: pass
+        logger.error("editar_club: %s", e)
+        return jsonify({"error": str(e)}), 500
+    finally:
+        release(conn)
+
+
 @app.route("/api/mi-club/<token>")
 def mi_club(token):
     """Devuelve los datos del club que corresponde al token."""
