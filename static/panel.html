@@ -162,7 +162,7 @@ header{background:var(--p);padding:12px 20px;display:flex;align-items:center;gap
     <div class="club-hero" id="club-hero">
       <div class="club-hero-icon">🏫</div>
       <div style="flex:1"><h2 id="ch-nombre">—</h2><p id="ch-meta">—</p>
-        <div id="ch-link-wrap" style="display:none;margin-top:6px;font-size:.72rem;opacity:.75;word-break:break-all" id="ch-link-text"></div>
+        <div id="ch-link-wrap" style="display:none;margin-top:6px;font-size:.72rem;opacity:.75;word-break:break-all"></div>
       </div>
       <button class="btn btn-sm" style="background:rgba(255,255,255,.18);flex-shrink:0" onclick="openEditarClub()">✏️ Editar club</button>
     </div>
@@ -456,7 +456,7 @@ async function abrirClub(club_id){
   g('ch-meta').textContent=`📍 ${CLUB_ACTIVO.ciudad||'—'}  ·  👤 ${CLUB_ACTIVO.nombres_dueno} ${CLUB_ACTIVO.apellidos_dueno}`;
   // Si el club entró con su token, mostrar su link en el hero
   if(MODO_CLUB && URL_TOKEN){
-    const link=`${location.origin}${location.pathname}?club=${URL_TOKEN}`;
+    const link=`${location.origin}/panel?club=${URL_TOKEN}`;
     const wrap=g('ch-link-wrap');
     wrap.innerHTML=`🔗 Tu link: <strong>${esc(link)}</strong>
       <button onclick="navigator.clipboard.writeText('${link}').then(()=>toast('✅ Copiado','ok'))"
@@ -633,7 +633,7 @@ async function enviarClub(){
       CLUBS=res.clubs||[];
       renderClubs();
       // Armar el link único del club
-      const link=`${location.origin}${location.pathname}?club=${res.token}`;
+      const link=`${location.origin}/panel?club=${res.token}`;
       const waMsg=encodeURIComponent(`🥋 Hola! Aquí está tu link de acceso al portal AKP:\n${link}`);
       // Mostrar el link en el modal en vez de cerrarlo
       g('m-club').querySelector('.mbody').innerHTML=`
