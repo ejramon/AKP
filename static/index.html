@@ -113,7 +113,7 @@ async function registrarClub(){
         nombres_dueno:v('c-nomb'),apellidos_dueno:v('c-apel'),cedula_dueno:v('c-ced')})});
     const res=await r.json();
     if(r.ok){
-      LINK_GENERADO=`${location.origin}/index.html?club=${res.token}`;
+      LINK_GENERADO=`${location.origin}/panel?club=${res.token}`;
       const waMsg=encodeURIComponent(`🥋 Hola! Aquí está tu link de acceso al portal AKP:\n${LINK_GENERADO}`);
       g('res-nombre').textContent=v('c-nombre');
       g('res-link').textContent=LINK_GENERADO;
