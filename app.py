@@ -1,4 +1,4 @@
-import os, hashlib, logging
+import os, hashlib, logging, secrets
 from datetime import datetime
 from flask import Flask, request, jsonify, send_from_directory
 import psycopg2
@@ -107,19 +107,20 @@ def crear_club():
     conn = None
     try:
         conn = get_conn(); cur = conn.cursor()
+        token = secrets.token_urlsafe(8)   # genera token único ej: "a3f9k2Xw"
         cur.execute("""INSERT INTO clubs
-            (nombre,ciudad,estado,nombres_dueno,apellidos_dueno,cedula_dueno,password_hash,debe_cambiar_pass)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,true)""",
+            (nombre,ciudad,estado,nombres_dueno,apellidos_dueno,cedula_dueno,password_hash,debe_cambiar_pass,token)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,true,%s)""",
             (d["nombre"].strip(),d.get("ciudad","").strip(),
              d.get("estado","activo"),d["nombres_dueno"].strip(),
              d["apellidos_dueno"].strip(),d["cedula_dueno"].strip(),
-             hash_val(d["cedula_dueno"])))
+             hash_val(d["cedula_dueno"]),token))
         conn.commit()
-        cur.execute("""SELECT id,nombre,ciudad,estado,nombres_dueno,apellidos_dueno,cedula_dueno
+        cur.execute("""SELECT id,nombre,ciudad,estado,nombres_dueno,apellidos_dueno,cedula_dueno,token
                        FROM clubs ORDER BY nombre""")
-        cols=["id","nombre","ciudad","estado","nombres_dueno","apellidos_dueno","cedula_dueno"]
+        cols=["id","nombre","ciudad","estado","nombres_dueno","apellidos_dueno","cedula_dueno","token"]
         clubs=[dict(zip(cols,r)) for r in cur.fetchall()]
-        return jsonify({"ok":True,"mensaje":"Club creado correctamente.","clubs":clubs})
+        return jsonify({"ok":True,"mensaje":"Club creado correctamente.","clubs":clubs,"token":token})
     except Exception as e:
         try: conn.rollback()
         except: pass
@@ -130,7 +131,28 @@ def crear_club():
     finally:
         release(conn)
 
-# ── Afiliados del club ─────────────────────────────────────────────────────
+# ── Club por token (acceso individual sin login) ───────────────────────────
+@app.route("/api/mi-club/<token>")
+def mi_club(token):
+    """Devuelve los datos del club que corresponde al token."""
+    conn = None
+    try:
+        conn = get_conn(); cur = conn.cursor()
+        cur.execute("""SELECT id,nombre,ciudad,estado,
+                              nombres_dueno,apellidos_dueno,cedula_dueno
+                       FROM clubs WHERE token=%s""", (token,))
+        row = cur.fetchone()
+        if not row:
+            return jsonify({"error": "Token inválido"}), 404
+        cols = ["id","nombre","ciudad","estado","nombres_dueno","apellidos_dueno","cedula_dueno"]
+        return jsonify(dict(zip(cols, row)))
+    except Exception as e:
+        logger.error("mi_club: %s", e)
+        return jsonify({"error": str(e)}), 500
+    finally:
+        release(conn)
+
+
 @app.route("/api/clubs/<int:club_id>/afiliados")
 def afiliados_club(club_id):
     conn = None
@@ -398,10 +420,12 @@ def health():
         release(conn)
 
 def init_db():
-    """Crea la tabla asistencia una sola vez al arrancar, en vez de en cada request."""
+    """Migraciones automáticas al arrancar. Se ejecuta una sola vez por deploy."""
     conn = None
     try:
         conn = get_conn(); cur = conn.cursor()
+
+        # ── Tabla asistencia ────────────────────────────────────────────────
         cur.execute("""CREATE TABLE IF NOT EXISTS asistencia (
             id       SERIAL PRIMARY KEY,
             club_id  INTEGER NOT NULL,
@@ -410,8 +434,21 @@ def init_db():
             estado   VARCHAR(20) NOT NULL DEFAULT 'sin_registro',
             UNIQUE(club_id, socio_id, fecha)
         )""")
+
+        # ── Columna token en clubs ──────────────────────────────────────────
+        # Agrega la columna si no existe (clubs nuevos la reciben al crearse).
+        cur.execute("ALTER TABLE clubs ADD COLUMN IF NOT EXISTS token VARCHAR(20)")
+        # Genera tokens para clubs que ya existían antes de este deploy.
+        cur.execute("""UPDATE clubs SET token = SUBSTR(MD5(cedula_dueno || id::text), 1, 11)
+                       WHERE token IS NULL""")
+        # Agrega constraint único si todavía no existe.
+        cur.execute("""DO $$ BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'clubs_token_unique')
+            THEN ALTER TABLE clubs ADD CONSTRAINT clubs_token_unique UNIQUE (token);
+            END IF; END $$""")
+
         conn.commit()
-        logger.info("init_db: tabla asistencia verificada.")
+        logger.info("init_db: migraciones aplicadas correctamente.")
     except Exception as e:
         try: conn.rollback()
         except: pass
