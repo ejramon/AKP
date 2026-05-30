@@ -454,11 +454,12 @@ async function abrirClub(club_id){
   if(!CLUB_ACTIVO)return;
   g('ch-nombre').textContent=CLUB_ACTIVO.nombre;
   g('ch-meta').textContent=`📍 ${CLUB_ACTIVO.ciudad||'—'}  ·  👤 ${CLUB_ACTIVO.nombres_dueno} ${CLUB_ACTIVO.apellidos_dueno}`;
-  // Si el club entró con su token, mostrar su link en el hero
-  if(MODO_CLUB && URL_TOKEN){
-    const link=`${location.origin}/panel?club=${URL_TOKEN}`;
+  // Mostrar el link del club en el hero (tanto para admin como para el club)
+  const tokenClub = CLUB_ACTIVO.token || URL_TOKEN;
+  if(tokenClub){
+    const link=`${location.origin}/panel?club=${tokenClub}`;
     const wrap=g('ch-link-wrap');
-    wrap.innerHTML=`🔗 Tu link: <strong>${esc(link)}</strong>
+    wrap.innerHTML=`🔗 Link del club: <strong>${esc(link)}</strong>
       <button onclick="navigator.clipboard.writeText('${link}').then(()=>toast('✅ Copiado','ok'))"
         style="margin-left:6px;background:rgba(255,255,255,.2);border:none;color:#fff;padding:2px 8px;border-radius:5px;cursor:pointer;font-size:.7rem">📋 Copiar</button>`;
     wrap.style.display='block';
