@@ -1,22 +1,50 @@
-import os, hashlib
+import os, hashlib, logging
 from datetime import datetime
 from flask import Flask, request, jsonify, send_from_directory
 import psycopg2
 from psycopg2 import pool as pg_pool
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s"
+)
+logger = logging.getLogger("akp")
+
 app = Flask(__name__, static_folder="static", static_url_path="")
 DATABASE_URL = os.environ.get("DATABASE_URL_MIEMBROS", os.environ.get("DATABASE_URL", ""))
 _pool = None
 
+def _crear_pool():
+    # keepalives: si Railway reinicia la DB, las conexiones muertas se detectan
+    # y se descartan en vez de quedar colgadas.
+    return pg_pool.SimpleConnectionPool(
+        1, 5, DATABASE_URL,
+        keepalives=1,
+        keepalives_idle=30,
+        keepalives_interval=10,
+        keepalives_count=5,
+    )
+
 def get_conn():
     global _pool
-    if _pool is None:
-        _pool = pg_pool.SimpleConnectionPool(1, 5, DATABASE_URL)
-    return _pool.getconn()
+    try:
+        if _pool is None:
+            _pool = _crear_pool()
+        return _pool.getconn()
+    except Exception as e:
+        # Si el pool quedó inservible (DB reiniciada), se descarta para que
+        # el próximo request lo recree desde cero.
+        logger.error("Pool inservible, se recreará: %s", e)
+        _pool = None
+        raise
 
 def release(conn):
     global _pool
-    if _pool: _pool.putconn(conn)
+    if _pool and conn:
+        try:
+            _pool.putconn(conn)
+        except Exception as e:
+            logger.error("Error al liberar conexión: %s", e)
 
 def hash_val(s):
     return hashlib.sha256(s.strip().encode()).hexdigest()
@@ -34,17 +62,22 @@ def index():
 # ── Categorías ─────────────────────────────────────────────────────────────
 @app.route("/api/categorias")
 def categorias():
+    conn = None
     try:
         conn = get_conn(); cur = conn.cursor()
         cur.execute("SELECT nombre FROM categorias ORDER BY nombre")
         cats = [r[0] for r in cur.fetchall() if "admin" not in r[0].lower()]
-        release(conn); return jsonify(cats)
+        return jsonify(cats)
     except Exception as e:
+        logger.error("categorias: %s", e)
         return jsonify({"error": str(e)}), 500
+    finally:
+        release(conn)
 
 # ── Clubs GET ──────────────────────────────────────────────────────────────
 @app.route("/api/clubs")
 def get_clubs():
+    conn = None
     try:
         conn = get_conn(); cur = conn.cursor()
         cur.execute("""SELECT id,nombre,ciudad,estado,
@@ -52,9 +85,12 @@ def get_clubs():
                        FROM clubs ORDER BY nombre""")
         cols=["id","nombre","ciudad","estado","nombres_dueno","apellidos_dueno","cedula_dueno"]
         clubs=[dict(zip(cols,r)) for r in cur.fetchall()]
-        release(conn); return jsonify(clubs)
+        return jsonify(clubs)
     except Exception as e:
+        logger.error("get_clubs: %s", e)
         return jsonify({"error": str(e)}), 500
+    finally:
+        release(conn)
 
 # ── Clubs POST ─────────────────────────────────────────────────────────────
 @app.route("/api/clubs", methods=["POST"])
@@ -63,6 +99,7 @@ def crear_club():
     req=["nombre","nombres_dueno","apellidos_dueno","cedula_dueno"]
     vacios=[c for c in req if not str(d.get(c,"")).strip()]
     if vacios: return jsonify({"error":f"Faltan: {', '.join(vacios)}"}), 400
+    conn = None
     try:
         conn = get_conn(); cur = conn.cursor()
         cur.execute("""INSERT INTO clubs
@@ -77,18 +114,21 @@ def crear_club():
                        FROM clubs ORDER BY nombre""")
         cols=["id","nombre","ciudad","estado","nombres_dueno","apellidos_dueno","cedula_dueno"]
         clubs=[dict(zip(cols,r)) for r in cur.fetchall()]
-        release(conn)
         return jsonify({"ok":True,"mensaje":"Club creado correctamente.","clubs":clubs})
     except Exception as e:
-        try: conn.rollback(); release(conn)
+        try: conn.rollback()
         except: pass
+        logger.error("crear_club: %s", e)
         if "unique" in str(e).lower():
             return jsonify({"error":"Ya existe un club con esa cédula."}), 409
         return jsonify({"error":str(e)}), 500
+    finally:
+        release(conn)
 
 # ── Afiliados del club ─────────────────────────────────────────────────────
 @app.route("/api/clubs/<int:club_id>/afiliados")
 def afiliados_club(club_id):
+    conn = None
     try:
         conn = get_conn(); cur = conn.cursor()
         cur.execute("""SELECT id,nombres,apellidos,cedula,categoria,
@@ -103,9 +143,12 @@ def afiliados_club(club_id):
               "telefono","correo","fecha_nacimiento","fecha_ingreso","edad",
               "ciudad_nacimiento","genero"]
         rows=[dict(zip(cols,r)) for r in cur.fetchall()]
-        release(conn); return jsonify(rows)
+        return jsonify(rows)
     except Exception as e:
+        logger.error("afiliados_club: %s", e)
         return jsonify({"error":str(e)}), 500
+    finally:
+        release(conn)
 
 # ── Registrar afiliado ─────────────────────────────────────────────────────
 @app.route("/api/registrar", methods=["POST"])
@@ -116,6 +159,7 @@ def registrar():
          "categoria","genero"]
     vacios=[c for c in req if not str(d.get(c,"")).strip()]
     if vacios: return jsonify({"error":f"Faltan: {', '.join(vacios)}"}), 400
+    conn = None
     try:
         conn = get_conn(); cur = conn.cursor()
         club_id=int(d["club_id"]) if d.get("club_id") else None
@@ -130,19 +174,23 @@ def registrar():
              d["ciudad_nacimiento"].strip(),parse_fecha(d["fecha_nacimiento"]),
              d["genero"].strip(),hash_val(d["cedula"]),
              d["ciudad_residencia"].strip(),club_id))
-        conn.commit(); release(conn)
+        conn.commit()
         return jsonify({"ok":True,"mensaje":"Afiliado registrado correctamente."})
     except Exception as e:
-        try: conn.rollback(); release(conn)
+        try: conn.rollback()
         except: pass
+        logger.error("registrar: %s", e)
         if "unique" in str(e).lower():
             return jsonify({"error":"Ya existe un afiliado con esa cédula."}), 409
         return jsonify({"error":str(e)}), 500
+    finally:
+        release(conn)
 
 # ── Editar afiliado ────────────────────────────────────────────────────────
 @app.route("/api/afiliados/<int:socio_id>", methods=["PUT"])
 def editar_afiliado(socio_id):
     d = request.get_json(force=True) or {}
+    conn = None
     try:
         conn = get_conn(); cur = conn.cursor()
         cur.execute("""UPDATE miembros SET
@@ -155,38 +203,50 @@ def editar_afiliado(socio_id):
              parse_fecha(d["fecha_ingreso"]),d["categoria"].strip(),
              d["ciudad_nacimiento"].strip(),parse_fecha(d["fecha_nacimiento"]),
              d["genero"].strip(),d["ciudad_residencia"].strip(),socio_id))
-        conn.commit(); release(conn)
+        conn.commit()
         return jsonify({"ok":True,"mensaje":"Afiliado actualizado."})
     except Exception as e:
-        try: conn.rollback(); release(conn)
+        try: conn.rollback()
         except: pass
+        logger.error("editar_afiliado: %s", e)
         return jsonify({"error":str(e)}), 500
+    finally:
+        release(conn)
 
 # ── Plantillas ─────────────────────────────────────────────────────────────
 @app.route("/api/plantillas")
 def get_plantillas():
+    conn = None
     try:
         conn = get_conn(); cur = conn.cursor()
         cur.execute("SELECT id,nombre FROM hist_plantillas WHERE activa=true ORDER BY nombre")
         plts=[{"id":r[0],"nombre":r[1]} for r in cur.fetchall()]
-        release(conn); return jsonify(plts)
+        return jsonify(plts)
     except Exception as e:
+        logger.error("get_plantillas: %s", e)
         return jsonify({"error":str(e)}), 500
+    finally:
+        release(conn)
 
 @app.route("/api/plantillas/<int:plt_id>/campos")
 def get_campos(plt_id):
+    conn = None
     try:
         conn = get_conn(); cur = conn.cursor()
         cur.execute("SELECT id,etiqueta,tipo FROM hist_campos WHERE plantilla_id=%s ORDER BY orden",
                     (plt_id,))
         campos=[{"id":r[0],"etiqueta":r[1],"tipo":r[2]} for r in cur.fetchall()]
-        release(conn); return jsonify(campos)
+        return jsonify(campos)
     except Exception as e:
+        logger.error("get_campos: %s", e)
         return jsonify({"error":str(e)}), 500
+    finally:
+        release(conn)
 
 # ── Historial ──────────────────────────────────────────────────────────────
 @app.route("/api/afiliados/<int:socio_id>/historial")
 def get_historial(socio_id):
+    conn = None
     try:
         conn = get_conn(); cur = conn.cursor()
         cur.execute("""SELECT hr.id, hp.nombre AS plantilla
@@ -201,9 +261,12 @@ def get_historial(socio_id):
                            WHERE hv.registro_id=%s ORDER BY hc.orden""", (rid,))
             campos=[{"etiqueta":r[0],"valor":r[1],"tipo":r[2]} for r in cur.fetchall()]
             registros.append({"id":rid,"plantilla":plt_nombre,"campos":campos})
-        release(conn); return jsonify(registros)
+        return jsonify(registros)
     except Exception as e:
+        logger.error("get_historial: %s", e)
         return jsonify({"error":str(e)}), 500
+    finally:
+        release(conn)
 
 @app.route("/api/afiliados/<int:socio_id>/historial", methods=["POST"])
 def add_historial(socio_id):
@@ -211,6 +274,7 @@ def add_historial(socio_id):
     plt_id  = d.get("plantilla_id")
     valores = d.get("valores", {})
     if not plt_id: return jsonify({"error":"Falta plantilla_id"}), 400
+    conn = None
     try:
         conn = get_conn(); cur = conn.cursor()
         cur.execute("INSERT INTO hist_registros (socio_id,plantilla_id) VALUES (%s,%s) RETURNING id",
@@ -219,18 +283,22 @@ def add_historial(socio_id):
         for campo_id, valor in valores.items():
             cur.execute("INSERT INTO hist_valores (registro_id,campo_id,valor) VALUES (%s,%s,%s)",
                         (reg_id, int(campo_id), str(valor)))
-        conn.commit(); release(conn)
+        conn.commit()
         return jsonify({"ok":True,"mensaje":"Registro guardado."})
     except Exception as e:
-        try: conn.rollback(); release(conn)
+        try: conn.rollback()
         except: pass
+        logger.error("add_historial: %s", e)
         return jsonify({"error":str(e)}), 500
+    finally:
+        release(conn)
 
 # ── Asistencia ─────────────────────────────────────────────────────────────
 @app.route("/api/clubs/<int:club_id>/asistencia")
 def get_asistencia(club_id):
     """Devuelve todos los registros de asistencia del club. Opcional: ?fecha=YYYY-MM-DD"""
     fecha = request.args.get("fecha")
+    conn = None
     try:
         conn = get_conn(); cur = conn.cursor()
         if fecha:
@@ -246,9 +314,12 @@ def get_asistencia(club_id):
             rows = {}
             for fecha_s, sid, estado in cur.fetchall():
                 rows.setdefault(fecha_s, {})[str(sid)] = estado
-        release(conn); return jsonify(rows)
+        return jsonify(rows)
     except Exception as e:
+        logger.error("get_asistencia: %s", e)
         return jsonify({"error": str(e)}), 500
+    finally:
+        release(conn)
 
 @app.route("/api/clubs/<int:club_id>/asistencia", methods=["POST"])
 def guardar_asistencia(club_id):
@@ -258,17 +329,9 @@ def guardar_asistencia(club_id):
     registros = d.get("registros", [])
     if not fecha:
         return jsonify({"error": "Falta fecha"}), 400
+    conn = None
     try:
         conn = get_conn(); cur = conn.cursor()
-        # Crear tabla si no existe (migración inline)
-        cur.execute("""CREATE TABLE IF NOT EXISTS asistencia (
-            id       SERIAL PRIMARY KEY,
-            club_id  INTEGER NOT NULL,
-            socio_id INTEGER NOT NULL,
-            fecha    DATE    NOT NULL,
-            estado   VARCHAR(20) NOT NULL DEFAULT 'sin_registro',
-            UNIQUE(club_id, socio_id, fecha)
-        )""")
         for reg in registros:
             sid   = int(reg["socio_id"])
             estado = reg.get("estado", "sin_registro")
@@ -277,23 +340,22 @@ def guardar_asistencia(club_id):
                            ON CONFLICT (club_id, socio_id, fecha)
                            DO UPDATE SET estado=EXCLUDED.estado""",
                         (club_id, sid, fecha, estado))
-        conn.commit(); release(conn)
+        conn.commit()
         return jsonify({"ok": True, "mensaje": f"Asistencia guardada para {fecha}."})
     except Exception as e:
-        try: conn.rollback(); release(conn)
+        try: conn.rollback()
         except: pass
+        logger.error("guardar_asistencia: %s", e)
         return jsonify({"error": str(e)}), 500
+    finally:
+        release(conn)
 
 @app.route("/api/clubs/<int:club_id>/asistencia/resumen")
 def resumen_asistencia(club_id):
     """Devuelve {fecha: {total, presentes}} para pintar el calendario."""
+    conn = None
     try:
         conn = get_conn(); cur = conn.cursor()
-        cur.execute("""CREATE TABLE IF NOT EXISTS asistencia (
-            id SERIAL PRIMARY KEY, club_id INTEGER NOT NULL,
-            socio_id INTEGER NOT NULL, fecha DATE NOT NULL,
-            estado VARCHAR(20) NOT NULL DEFAULT 'sin_registro',
-            UNIQUE(club_id, socio_id, fecha))""")
         cur.execute("""SELECT TO_CHAR(fecha,'YYYY-MM-DD'),
                               COUNT(*) FILTER (WHERE estado='presente') AS p,
                               COUNT(*) FILTER (WHERE estado='ausente')  AS a,
@@ -303,13 +365,54 @@ def resumen_asistencia(club_id):
                        GROUP BY fecha""", (club_id,))
         rows = {r[0]: {"presentes": r[1], "ausentes": r[2], "total": r[3]}
                 for r in cur.fetchall()}
-        release(conn); return jsonify(rows)
+        return jsonify(rows)
     except Exception as e:
+        logger.error("resumen_asistencia: %s", e)
         return jsonify({"error": str(e)}), 500
+    finally:
+        release(conn)
 
 @app.route("/health")
 def health():
-    return "ok", 200
+    conn = None
+    try:
+        conn = get_conn(); cur = conn.cursor()
+        cur.execute("SELECT 1")
+        cur.fetchone()
+        return jsonify({"status": "ok", "db": "ok"}), 200
+    except Exception as e:
+        logger.error("health: DB no responde: %s", e)
+        return jsonify({"status": "ok", "db": "error", "detail": str(e)}), 503
+    finally:
+        release(conn)
+
+def init_db():
+    """Crea la tabla asistencia una sola vez al arrancar, en vez de en cada request."""
+    conn = None
+    try:
+        conn = get_conn(); cur = conn.cursor()
+        cur.execute("""CREATE TABLE IF NOT EXISTS asistencia (
+            id       SERIAL PRIMARY KEY,
+            club_id  INTEGER NOT NULL,
+            socio_id INTEGER NOT NULL,
+            fecha    DATE    NOT NULL,
+            estado   VARCHAR(20) NOT NULL DEFAULT 'sin_registro',
+            UNIQUE(club_id, socio_id, fecha)
+        )""")
+        conn.commit()
+        logger.info("init_db: tabla asistencia verificada.")
+    except Exception as e:
+        try: conn.rollback()
+        except: pass
+        logger.error("init_db falló: %s", e)
+    finally:
+        release(conn)
+
+# Se ejecuta al importar el módulo (gunicorn) y al correr directo.
+try:
+    init_db()
+except Exception as e:
+    logger.error("No se pudo inicializar la DB al arrancar: %s", e)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5001)))
