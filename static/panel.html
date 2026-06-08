@@ -224,7 +224,7 @@ header{background:var(--p);padding:12px 20px;display:flex;align-items:center;gap
       <!-- Lista de asistencia -->
       <div>
         <div class="lista-asist" id="asist-lista">
-          <div class="asist-placeholder">📅 Seleccioná un día en el calendario para registrar asistencia.</div>
+          <div class="asist-placeholder">📅 Selecciona un día en el calendario para registrar asistencia.</div>
         </div>
       </div>
     </div>
@@ -236,7 +236,7 @@ header{background:var(--p);padding:12px 20px;display:flex;align-items:center;gap
 <div class="modal-bg" id="m-edit-club" onclick="bgc(event,'m-edit-club')">
   <div class="modal">
     <div class="mhdr">
-      <div><h2>✏️ Editar Club</h2><p>Podés cambiar todos los datos excepto el nombre</p></div>
+      <div><h2>✏️ Editar Club</h2><p>Puedes cambiar todos los datos excepto el nombre</p></div>
       <button class="xbtn" onclick="closeModal('m-edit-club')">✕</button>
     </div>
     <div class="mbody">
@@ -566,7 +566,7 @@ function calcEdad(){
 
 async function enviarAfiliado(){
   const req=['a-nomb','a-apel','a-ced','a-tel','a-dir','a-cor','a-cnac','a-cres','a-fnac','a-fing','a-cat','a-gen'];
-  if(req.some(id=>!v(id))){toast('⚠️ Completá todos los campos.','err');return;}
+  if(req.some(id=>!v(id))){toast('⚠️ Completa todos los campos.','err');return;}
   const payload={nombres:v('a-nomb'),apellidos:v('a-apel'),cedula:v('a-ced'),
     telefono:v('a-tel'),direccion:v('a-dir'),correo:v('a-cor'),
     ciudad_nacimiento:v('a-cnac'),ciudad_residencia:v('a-cres'),
@@ -623,7 +623,7 @@ async function enviarHistorial(){
 }
 
 async function enviarClub(){
-  if(!v('c-nombre')||!v('c-nomb')||!v('c-apel')||!v('c-ced')){toast('⚠️ Completá los campos obligatorios.','err');return;}
+  if(!v('c-nombre')||!v('c-nomb')||!v('c-apel')||!v('c-ced')){toast('⚠️ Completa los campos obligatorios.','err');return;}
   const btn=g('btn-club');btn.disabled=true;btn.textContent='Guardando...';
   try{
     const r=await fetch('/api/clubs',{method:'POST',headers:{'Content-Type':'application/json'},
@@ -641,7 +641,7 @@ async function enviarClub(){
         <div style="text-align:center;padding:8px 0">
           <div style="font-size:2rem;margin-bottom:8px">✅</div>
           <div style="font-size:.95rem;font-weight:700;color:var(--p);margin-bottom:4px">${esc(v('c-nombre'))} creado</div>
-          <div style="font-size:.78rem;color:var(--ts);margin-bottom:16px">Compartí este link con el club:</div>
+          <div style="font-size:.78rem;color:var(--ts);margin-bottom:16px">Comparte este link con el club:</div>
           <div style="background:var(--f);border:1px solid var(--b);border-radius:10px;padding:10px 12px;font-size:.78rem;word-break:break-all;color:var(--t);margin-bottom:14px">${esc(link)}</div>
           <div style="display:flex;gap:8px;justify-content:center">
             <button class="btn btn-sm" onclick="navigator.clipboard.writeText('${link}').then(()=>toast('✅ Link copiado','ok'))">📋 Copiar link</button>
@@ -667,7 +667,7 @@ async function abrirAsistencia(club_id){
   CAL_YEAR=new Date().getFullYear(); CAL_MONTH=new Date().getMonth();
   g('asist-club-nombre').textContent=ASIST_CLUB.nombre;
   g('asist-club-meta').textContent=`📍 ${ASIST_CLUB.ciudad||'—'} · Control de Asistencia`;
-  g('asist-lista').innerHTML='<div class="asist-placeholder">📅 Seleccioná un día en el calendario para registrar asistencia.</div>';
+  g('asist-lista').innerHTML='<div class="asist-placeholder">📅 Selecciona un día en el calendario para registrar asistencia.</div>';
   goScreen('asist',`Asistencia — ${ASIST_CLUB.nombre}`,'Control de asistencia',()=>{
     goScreen('asist',`Asistencia — ${ASIST_CLUB.nombre}`,'Control de asistencia');
   });
