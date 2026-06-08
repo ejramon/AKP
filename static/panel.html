@@ -1,235 +1,845 @@
-import os, hashlib
-from datetime import datetime
-from flask import Flask, request, jsonify, send_from_directory
-import psycopg2
-from psycopg2 import pool as pg_pool
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AKP — Portal</title>
+<style>
+:root{--p:#1A3A6B;--pd:#0F2347;--a:#2563EB;--t:#1E293B;--ts:#64748B;--b:#CBD5E1;--f:#F0F4F8;--s:#fff;--ok:#16A34A;--err:#DC2626;--warn:#D97706}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--f);color:var(--t);min-height:100vh}
+header{background:var(--p);padding:12px 20px;display:flex;align-items:center;gap:10px;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.2);position:sticky;top:0;z-index:50}
+#header-title{font-size:1rem;font-weight:700}
+#header-sub{font-size:.72rem;opacity:.65;margin-top:1px}
+.btn-back{background:rgba(255,255,255,.15);border:none;color:#fff;padding:6px 12px;border-radius:7px;cursor:pointer;font-family:inherit;font-size:.82rem;align-items:center;gap:5px;display:none}
+.btn-back:hover{background:rgba(255,255,255,.25)}
+.screen{display:none}.screen.active{display:block}
+.main{max-width:960px;margin:22px auto;padding:0 16px}
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.sec-title{font-size:.72rem;font-weight:700;color:var(--ts);text-transform:uppercase;letter-spacing:.1em;flex:1;display:flex;align-items:center;gap:8px}
+.sec-title::after{content:'';flex:1;height:1px;background:var(--b)}
+.clubs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.club-card{background:var(--s);border:1px solid var(--b);border-radius:14px;padding:16px;cursor:pointer;transition:all .15s;position:relative;overflow:hidden}
+.club-card:hover{border-color:var(--a);box-shadow:0 4px 14px rgba(37,99,235,.12);transform:translateY(-2px)}
+.club-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--a)}
+.club-icon{font-size:1.8rem;margin-bottom:7px}
+.club-nombre{font-size:.93rem;font-weight:700;color:var(--p);margin-bottom:2px}
+.club-meta{font-size:.73rem;color:var(--ts);margin-top:1px}
+.badge{display:inline-block;margin-top:7px;padding:2px 9px;border-radius:10px;font-size:.67rem;font-weight:700}
+.activo{background:#DCFCE7;color:var(--ok)}.otro{background:#FEF3C7;color:var(--warn)}
+.club-hero{background:var(--p);padding:20px;border-radius:14px;margin-bottom:20px;color:#fff;display:flex;align-items:center;gap:14px}
+.club-hero-icon{width:50px;height:50px;border-radius:12px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0}
+.club-hero h2{font-size:1.05rem;font-weight:700}
+.club-hero p{font-size:.76rem;opacity:.7;margin-top:3px}
+.tabla-wrap{background:var(--s);border:1px solid var(--b);border-radius:12px;overflow:hidden;margin-bottom:18px}
+.t-head{background:var(--pd);display:grid;padding:9px 12px;gap:6px}
+.t-head span{font-size:.63rem;font-weight:700;color:rgba(255,255,255,.75);text-transform:uppercase;letter-spacing:.06em}
+.t-row{display:grid;padding:10px 12px;gap:6px;border-bottom:1px solid var(--b);align-items:center;cursor:pointer}
+.t-row:last-child{border-bottom:none}
+.t-row:nth-child(even){background:var(--f)}
+.t-row:hover{background:rgba(37,99,235,.06)}
+.t-row span{font-size:.81rem;color:var(--t);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cols7{grid-template-columns:40px 1fr 1fr 115px 105px 55px 90px}
+.t-empty{padding:36px;text-align:center;color:var(--ts);font-size:.86rem}
+.ficha-hero{background:var(--p);padding:20px;border-radius:14px;margin-bottom:18px;color:#fff;display:flex;align-items:center;gap:14px}
+.ficha-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:18px}
+.fdato{background:var(--s);border:1px solid var(--b);border-radius:10px;padding:10px 13px}
+.fdato .lbl{font-size:.65rem;font-weight:600;color:var(--ts);text-transform:uppercase;letter-spacing:.07em;margin-bottom:2px}
+.fdato .val{font-size:.87rem;color:var(--t);font-weight:500}
+.hist-card{background:var(--s);border:1px solid var(--b);border-radius:12px;margin-bottom:11px;overflow:hidden}
+.hist-hdr{background:var(--f);padding:9px 13px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--b)}
+.hist-hdr strong{font-size:.83rem;color:var(--p);font-weight:700}
+.hist-hdr span{font-size:.71rem;color:var(--ts)}
+.hist-body{padding:11px 13px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.hcampo .hl{font-size:.64rem;color:var(--ts);text-transform:uppercase;margin-bottom:1px;font-weight:600}
+.hcampo .hv{font-size:.8rem;color:var(--t)}
+.hcampo.full{grid-column:1/-1}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:12px}
+.modal-bg.open{display:flex}
+.modal{background:var(--s);border-radius:14px;width:min(590px,100%);max-height:94vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.mhdr{background:var(--p);padding:14px 20px;border-radius:14px 14px 0 0;display:flex;justify-content:space-between;align-items:center;color:#fff}
+.mhdr h2{font-size:.9rem;font-weight:700}
+.mhdr p{font-size:.7rem;opacity:.65;margin-top:2px}
+.xbtn{background:rgba(255,255,255,.15);border:none;color:#fff;width:26px;height:26px;border-radius:6px;cursor:pointer;font-size:.87rem}
+.mbody{padding:16px 20px}
+.mfoot{display:flex;gap:8px;justify-content:flex-end;padding:11px 20px 16px;border-top:1px solid var(--b)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.full{grid-column:1/-1}
+.f{display:flex;flex-direction:column;gap:4px}
+.f label{font-size:.66rem;font-weight:600;color:var(--ts);text-transform:uppercase;letter-spacing:.07em}
+.f input,.f select,.f textarea{width:100%;padding:8px 10px;background:var(--f);border:1px solid var(--b);border-radius:8px;font-size:.86rem;color:var(--t);font-family:inherit;outline:none;resize:vertical}
+.f input:focus,.f select:focus,.f textarea:focus{border-color:var(--a)}
+.sep{grid-column:1/-1;border:none;border-top:1px solid var(--b);margin:2px 0}
+.btn{background:var(--a);color:#fff;border:none;padding:9px 15px;border-radius:8px;font-size:.85rem;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:5px}
+.btn:hover{opacity:.9}.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-sm{padding:6px 11px;font-size:.76rem}
+.btn-c{background:none;border:1px solid var(--b);color:var(--ts);padding:8px 14px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:.83rem}
+.btn-c:hover{border-color:var(--err);color:var(--err)}
+.btn-green{background:#16A34A}
+.edad-hint{margin-top:8px;font-size:.73rem;color:var(--ts);background:var(--f);padding:6px 10px;border-radius:7px;border-left:3px solid var(--a)}
+#toast{position:fixed;bottom:14px;right:14px;z-index:999;display:flex;flex-direction:column;gap:7px}
+.ti{padding:10px 14px;border-radius:9px;font-size:.82rem;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.18);max-width:300px}
+.tok{background:#DCFCE7;border:1px solid var(--ok);color:var(--ok)}
+.terr{background:#FEE2E2;border:1px solid var(--err);color:var(--err)}
 
-app = Flask(__name__, static_folder="static", static_url_path="")
-DATABASE_URL = os.environ.get("DATABASE_URL_MIEMBROS", os.environ.get("DATABASE_URL", ""))
-_pool = None
+/* ── Calendario de asistencia ── */
+.asist-layout{display:grid;grid-template-columns:340px 1fr;gap:18px;align-items:start}
+.cal-wrap{background:var(--s);border:1px solid var(--b);border-radius:14px;padding:14px;user-select:none}
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.cal-nav span{font-size:.88rem;font-weight:700;color:var(--p)}
+.cal-nav button{background:none;border:1px solid var(--b);color:var(--ts);width:28px;height:28px;border-radius:7px;cursor:pointer;font-size:.9rem;display:flex;align-items:center;justify-content:center}
+.cal-nav button:hover{border-color:var(--a);color:var(--a)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-dow{font-size:.6rem;font-weight:700;color:var(--ts);text-align:center;padding:3px 0;text-transform:uppercase}
+.cal-day{aspect-ratio:1;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:2px solid transparent;transition:all .12s;position:relative;font-size:.8rem;font-weight:600;color:var(--t);background:var(--f)}
+.cal-day:hover{border-color:var(--a);color:var(--a)}
+.cal-day.empty{background:transparent;cursor:default;pointer-events:none}
+.cal-day.today{border-color:var(--a)!important;color:var(--a)}
+.cal-day.selected{background:var(--a);color:#fff;border-color:var(--a)}
+.cal-day.selected:hover{background:var(--pd)}
+.cal-day.has-data .dot{width:5px;height:5px;border-radius:50%;background:var(--ok);position:absolute;bottom:3px}
+.cal-day.has-data.solo-ausentes .dot{background:var(--err)}
+.cal-day.selected .dot{background:#fff}
+.lista-asist{background:var(--s);border:1px solid var(--b);border-radius:14px;overflow:hidden}
+.asist-fecha-hdr{background:var(--pd);padding:12px 16px;color:#fff;font-size:.85rem;font-weight:700}
+.asist-row{display:grid;grid-template-columns:1fr auto;align-items:center;padding:10px 16px;border-bottom:1px solid var(--b);gap:10px}
+.asist-row:last-child{border-bottom:none}
+.asist-row:nth-child(even){background:var(--f)}
+.asist-nombre{font-size:.83rem;font-weight:600;color:var(--t)}
+.asist-cat{font-size:.7rem;color:var(--ts)}
+.asist-btns{display:flex;gap:5px}
+.ab{border:none;border-radius:6px;padding:5px 10px;font-size:.73rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .1s;opacity:.45}
+.ab:hover{opacity:.8}
+.ab.active{opacity:1;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.ab-p{background:#DCFCE7;color:var(--ok)}
+.ab-a{background:#FEE2E2;color:var(--err)}
+.ab-s{background:#F1F5F9;color:var(--ts)}
+.asist-footer{padding:12px 16px;border-top:1px solid var(--b);display:flex;justify-content:space-between;align-items:center;background:var(--f)}
+.asist-resumen{font-size:.76rem;color:var(--ts)}
+.asist-placeholder{padding:48px 24px;text-align:center;color:var(--ts);font-size:.86rem}
 
-def get_conn():
-    global _pool
-    if _pool is None:
-        _pool = pg_pool.SimpleConnectionPool(1, 5, DATABASE_URL)
-    return _pool.getconn()
+/* ── Screen asistencia ── */
+#s-asist .main{max-width:960px;margin:22px auto;padding:0 16px}
+.btn-asist{display:block;width:100%;margin-top:10px;background:var(--p);color:#fff;border:none;padding:8px 12px;border-radius:8px;font-size:.78rem;font-weight:700;cursor:pointer;font-family:inherit;text-align:left;display:flex;align-items:center;gap:6px;transition:background .15s}
+.btn-asist:hover{background:var(--pd)}
 
-def release(conn):
-    global _pool
-    if _pool: _pool.putconn(conn)
+@media(max-width:680px){
+  .asist-layout{grid-template-columns:1fr}
+  .cal-day{font-size:.72rem}
+}
+@media(max-width:520px){
+  .grid2,.ficha-grid{grid-template-columns:1fr}
+  .clubs-grid{grid-template-columns:1fr}
+  .cols7{grid-template-columns:36px 1fr 1fr}
+  .cols7 span:nth-child(n+4){display:none}
+  .hist-body{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<header>
+  <button class="btn-back" id="btn-back" onclick="navBack()">◀ Volver</button>
+  <div style="font-size:1.4rem">🥋</div>
+  <div><div id="header-title">AKP — Panel Admin</div><div id="header-sub">Gestión de clubs y afiliados</div></div>
+</header>
 
-def hash_val(s):
-    return hashlib.sha256(s.strip().encode()).hexdigest()
+<!-- HOME -->
+<div class="screen active" id="s-home">
+  <div class="main">
+    <div class="sec-hdr">
+      <div class="sec-title">🏫 Clubs</div>
+      <button class="btn" onclick="openModal('m-club')">➕ Agregar Club</button>
+    </div>
+    <div class="clubs-grid" id="clubs-grid">
+      <div style="color:var(--ts);font-size:.85rem;padding:8px">Cargando...</div>
+    </div>
+  </div>
+</div>
 
-def parse_fecha(s):
-    for fmt in ("%Y-%m-%d", "%d/%m/%Y"):
-        try: return datetime.strptime(s.strip(), fmt).date()
-        except: pass
-    raise ValueError(f"Fecha inválida: {s}")
+<!-- CLUB -->
+<div class="screen" id="s-club">
+  <div class="main">
+    <div class="club-hero" id="club-hero">
+      <div class="club-hero-icon">🏫</div>
+      <div style="flex:1"><h2 id="ch-nombre">—</h2><p id="ch-meta">—</p>
+        <div id="ch-link-wrap" style="display:none;margin-top:6px;font-size:.72rem;opacity:.75;word-break:break-all"></div>
+      </div>
+      <button class="btn btn-sm" style="background:rgba(255,255,255,.18);flex-shrink:0" onclick="openEditarClub()">✏️ Editar club</button>
+    </div>
+    <div class="sec-hdr">
+      <div class="sec-title">👥 Afiliados</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" style="background:var(--p)" onclick="abrirAsistencia(CLUB_ACTIVO?.id)">📋 Control de Asistencia</button>
+        <button class="btn" onclick="openAfiliadoNew()">➕ Agregar Afiliado</button>
+      </div>
+    </div>
+    <div class="tabla-wrap">
+      <div class="t-head cols7">
+        <span>ID</span><span>Nombres</span><span>Apellidos</span>
+        <span>Cédula</span><span>Categoría</span><span>Edad</span><span>Ciudad Res.</span>
+      </div>
+      <div id="tabla-body"><div class="t-empty">Cargando...</div></div>
+    </div>
+  </div>
+</div>
 
-@app.route("/")
-def index():
-    return send_from_directory("static", "index.html")
+<!-- FICHA -->
+<div class="screen" id="s-ficha">
+  <div class="main">
+    <div class="ficha-hero" id="ficha-hero">
+      <div style="width:50px;height:50px;border-radius:12px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0">👤</div>
+      <div style="flex:1">
+        <h2 id="fh-nombre" style="font-size:1.05rem;font-weight:700">—</h2>
+        <p id="fh-meta" style="font-size:.76rem;opacity:.7;margin-top:3px">—</p>
+      </div>
+      <button class="btn btn-sm" style="background:rgba(255,255,255,.18);flex-shrink:0" onclick="openAfiliadoEdit()">✏️ Editar</button>
+    </div>
+    <div class="sec-hdr" style="margin-bottom:10px"><div class="sec-title">Datos personales</div></div>
+    <div class="ficha-grid" id="ficha-datos"></div>
+    <div class="sec-hdr" style="margin-top:18px">
+      <div class="sec-title">📋 Historial</div>
+      <button class="btn" onclick="openModal('m-hist')">➕ Agregar Registro</button>
+    </div>
+    <div id="historial-wrap"><div class="t-empty">Cargando...</div></div>
+  </div>
+</div>
 
-# ── Categorías ─────────────────────────────────────────────────────────────
-@app.route("/api/categorias")
-def categorias():
-    try:
-        conn = get_conn(); cur = conn.cursor()
-        cur.execute("SELECT nombre FROM categorias ORDER BY nombre")
-        cats = [r[0] for r in cur.fetchall()]
-        release(conn); return jsonify(cats)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+<!-- ASISTENCIA -->
+<div class="screen" id="s-asist">
+  <div class="main">
+    <div class="club-hero" id="asist-hero">
+      <div class="club-hero-icon">📅</div>
+      <div><h2 id="asist-club-nombre">—</h2><p id="asist-club-meta">Control de Asistencia</p></div>
+    </div>
+    <div class="asist-layout">
+      <!-- Calendario -->
+      <div class="cal-wrap">
+        <div class="cal-nav">
+          <button onclick="calPrev()">◀</button>
+          <span id="cal-titulo">—</span>
+          <button onclick="calNext()">▶</button>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+      </div>
+      <!-- Lista de asistencia -->
+      <div>
+        <div class="lista-asist" id="asist-lista">
+          <div class="asist-placeholder">📅 Seleccioná un día en el calendario para registrar asistencia.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-# ── Clubs GET ──────────────────────────────────────────────────────────────
-@app.route("/api/clubs")
-def get_clubs():
-    try:
-        conn = get_conn(); cur = conn.cursor()
-        cur.execute("""SELECT id,nombre,ciudad,estado,
-                              nombres_dueno,apellidos_dueno,cedula_dueno
-                       FROM clubs ORDER BY nombre""")
-        cols=["id","nombre","ciudad","estado","nombres_dueno","apellidos_dueno","cedula_dueno"]
-        clubs=[dict(zip(cols,r)) for r in cur.fetchall()]
-        release(conn); return jsonify(clubs)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
 
-# ── Clubs POST ─────────────────────────────────────────────────────────────
-@app.route("/api/clubs", methods=["POST"])
-def crear_club():
-    d = request.get_json(force=True) or {}
-    req=["nombre","nombres_dueno","apellidos_dueno","cedula_dueno"]
-    vacios=[c for c in req if not str(d.get(c,"")).strip()]
-    if vacios: return jsonify({"error":f"Faltan: {', '.join(vacios)}"}), 400
-    try:
-        conn = get_conn(); cur = conn.cursor()
-        cur.execute("""INSERT INTO clubs
-            (nombre,ciudad,estado,nombres_dueno,apellidos_dueno,cedula_dueno,password_hash,debe_cambiar_pass)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,true)""",
-            (d["nombre"].strip(),d.get("ciudad","").strip(),
-             d.get("estado","activo"),d["nombres_dueno"].strip(),
-             d["apellidos_dueno"].strip(),d["cedula_dueno"].strip(),
-             hash_val(d["cedula_dueno"])))
-        conn.commit()
-        cur.execute("""SELECT id,nombre,ciudad,estado,nombres_dueno,apellidos_dueno,cedula_dueno
-                       FROM clubs ORDER BY nombre""")
-        cols=["id","nombre","ciudad","estado","nombres_dueno","apellidos_dueno","cedula_dueno"]
-        clubs=[dict(zip(cols,r)) for r in cur.fetchall()]
-        release(conn)
-        return jsonify({"ok":True,"mensaje":"Club creado correctamente.","clubs":clubs})
-    except Exception as e:
-        try: conn.rollback(); release(conn)
-        except: pass
-        if "unique" in str(e).lower():
-            return jsonify({"error":"Ya existe un club con esa cédula."}), 409
-        return jsonify({"error":str(e)}), 500
+<!-- MODAL EDITAR CLUB -->
+<div class="modal-bg" id="m-edit-club" onclick="bgc(event,'m-edit-club')">
+  <div class="modal">
+    <div class="mhdr">
+      <div><h2>✏️ Editar Club</h2><p>Podés cambiar todos los datos excepto el nombre</p></div>
+      <button class="xbtn" onclick="closeModal('m-edit-club')">✕</button>
+    </div>
+    <div class="mbody">
+      <div class="grid2">
+        <div class="f full">
+          <label>Nombre del Club</label>
+          <input id="ec-nombre" disabled style="opacity:.5;cursor:not-allowed" placeholder="No se puede modificar">
+        </div>
+        <div class="f"><label>Ciudad</label><input id="ec-ciudad"></div>
+        <div class="f"><label>Estado</label>
+          <select id="ec-estado">
+            <option value="activo">Activo</option>
+            <option value="pendiente">Pendiente</option>
+            <option value="inactivo">Inactivo</option>
+          </select>
+        </div>
+        <hr class="sep">
+        <div class="f"><label>Nombres Responsable *</label><input id="ec-nomb"></div>
+        <div class="f"><label>Apellidos Responsable *</label><input id="ec-apel"></div>
+        <div class="f"><label>Cédula Responsable *</label><input id="ec-ced" inputmode="numeric" maxlength="20"></div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn-c" onclick="closeModal('m-edit-club')">Cancelar</button>
+      <button class="btn" id="btn-edit-club" onclick="enviarEditarClub()">💾 Guardar cambios</button>
+    </div>
+  </div>
+</div>
 
-# ── Afiliados del club ─────────────────────────────────────────────────────
-@app.route("/api/clubs/<int:club_id>/afiliados")
-def afiliados_club(club_id):
-    try:
-        conn = get_conn(); cur = conn.cursor()
-        cur.execute("""SELECT id,nombres,apellidos,cedula,categoria,
-                              ciudad_residencia,telefono,correo,
-                              TO_CHAR(fecha_nacimiento,'DD/MM/YYYY'),
-                              TO_CHAR(fecha_ingreso,'DD/MM/YYYY'),
-                              DATE_PART('year',AGE(fecha_nacimiento))::int,
-                              ciudad_nacimiento, genero
-                       FROM miembros WHERE club_id=%s
-                       ORDER BY apellidos,nombres""", (club_id,))
-        cols=["id","nombres","apellidos","cedula","categoria","ciudad_residencia",
-              "telefono","correo","fecha_nacimiento","fecha_ingreso","edad",
-              "ciudad_nacimiento","genero"]
-        rows=[dict(zip(cols,r)) for r in cur.fetchall()]
-        release(conn); return jsonify(rows)
-    except Exception as e:
-        return jsonify({"error":str(e)}), 500
+<div class="modal-bg" id="m-club" onclick="bgc(event,'m-club')">
+  <div class="modal">
+    <div class="mhdr">
+      <div><h2>🏫 Agregar Club</h2><p>Datos del club y del responsable</p></div>
+      <button class="xbtn" onclick="closeModal('m-club')">✕</button>
+    </div>
+    <div class="mbody">
+      <div class="grid2">
+        <div class="f full"><label>Nombre del Club *</label><input id="c-nombre" placeholder="Ej: Dojo Quito Norte"></div>
+        <div class="f"><label>Ciudad</label><input id="c-ciudad" placeholder="Ej: Quito"></div>
+        <div class="f"><label>Estado</label>
+          <select id="c-estado"><option value="activo">Activo</option><option value="pendiente">Pendiente</option></select></div>
+        <hr class="sep">
+        <div class="f"><label>Nombres Responsable *</label><input id="c-nomb"></div>
+        <div class="f"><label>Apellidos Responsable *</label><input id="c-apel"></div>
+        <div class="f"><label>Cédula Responsable *</label><input id="c-ced" inputmode="numeric" maxlength="20"></div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn-c" onclick="closeModal('m-club')">Cancelar</button>
+      <button class="btn" id="btn-club" onclick="enviarClub()">💾 Guardar Club</button>
+    </div>
+  </div>
+</div>
 
-# ── Registrar afiliado ─────────────────────────────────────────────────────
-@app.route("/api/registrar", methods=["POST"])
-def registrar():
-    d = request.get_json(force=True) or {}
-    req=["nombres","apellidos","cedula","telefono","direccion","correo",
-         "ciudad_nacimiento","ciudad_residencia","fecha_nacimiento","fecha_ingreso",
-         "categoria","genero"]
-    vacios=[c for c in req if not str(d.get(c,"")).strip()]
-    if vacios: return jsonify({"error":f"Faltan: {', '.join(vacios)}"}), 400
-    try:
-        conn = get_conn(); cur = conn.cursor()
-        club_id=int(d["club_id"]) if d.get("club_id") else None
-        cur.execute("""INSERT INTO miembros
-            (nombres,apellidos,cedula,telefono,direccion,correo,
-             fecha_ingreso,categoria,ciudad_nacimiento,fecha_nacimiento,
-             genero,password_hash,debe_cambiar_pass,ciudad_residencia,club_id)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,true,%s,%s)""",
-            (d["nombres"].strip(),d["apellidos"].strip(),d["cedula"].strip(),
-             d["telefono"].strip(),d["direccion"].strip(),d["correo"].strip(),
-             parse_fecha(d["fecha_ingreso"]),d["categoria"].strip(),
-             d["ciudad_nacimiento"].strip(),parse_fecha(d["fecha_nacimiento"]),
-             d["genero"].strip(),hash_val(d["cedula"]),
-             d["ciudad_residencia"].strip(),club_id))
-        conn.commit(); release(conn)
-        return jsonify({"ok":True,"mensaje":"Afiliado registrado correctamente."})
-    except Exception as e:
-        try: conn.rollback(); release(conn)
-        except: pass
-        if "unique" in str(e).lower():
-            return jsonify({"error":"Ya existe un afiliado con esa cédula."}), 409
-        return jsonify({"error":str(e)}), 500
+<!-- MODAL AFILIADO -->
+<div class="modal-bg" id="m-afil" onclick="bgc(event,'m-afil')">
+  <div class="modal">
+    <div class="mhdr">
+      <div><h2 id="m-afil-title">➕ Nuevo Afiliado</h2><p id="m-afil-sub">—</p></div>
+      <button class="xbtn" onclick="closeModal('m-afil')">✕</button>
+    </div>
+    <div class="mbody">
+      <div class="grid2">
+        <div class="f"><label>Nombres *</label><input id="a-nomb" placeholder="Ej: Juan Carlos"></div>
+        <div class="f"><label>Apellidos *</label><input id="a-apel" placeholder="Ej: González"></div>
+        <div class="f"><label>Cédula *</label><input id="a-ced" inputmode="numeric" maxlength="20"></div>
+        <div class="f"><label>Teléfono *</label><input id="a-tel"></div>
+        <div class="f full"><label>Dirección *</label><input id="a-dir"></div>
+        <div class="f full"><label>Correo *</label><input id="a-cor" type="email"></div>
+        <div class="f"><label>Ciudad Nacimiento *</label><input id="a-cnac"></div>
+        <div class="f"><label>Ciudad Residencia *</label><input id="a-cres"></div>
+        <div class="f"><label>Fecha Nacimiento *</label><input id="a-fnac" type="date" oninput="calcEdad()"></div>
+        <div class="f"><label>Fecha Ingreso *</label><input id="a-fing" type="date"></div>
+        <div class="f"><label>Categoría *</label>
+          <select id="a-cat"><option value="">— Seleccioná —</option></select></div>
+        <div class="f"><label>Género *</label>
+          <select id="a-gen"><option value="">— Seleccioná —</option>
+            <option value="Hombre">Hombre</option><option value="Mujer">Mujer</option></select></div>
+      </div>
+      <div class="edad-hint" id="edad-hint" hidden>🎂 Edad calculada: <strong id="edad-val">—</strong> años</div>
+    </div>
+    <div class="mfoot">
+      <button class="btn-c" onclick="closeModal('m-afil')">Cancelar</button>
+      <button class="btn" id="btn-afil" onclick="enviarAfiliado()">✅ Guardar</button>
+    </div>
+  </div>
+</div>
 
-# ── Editar afiliado ────────────────────────────────────────────────────────
-@app.route("/api/afiliados/<int:socio_id>", methods=["PUT"])
-def editar_afiliado(socio_id):
-    d = request.get_json(force=True) or {}
-    try:
-        conn = get_conn(); cur = conn.cursor()
-        cur.execute("""UPDATE miembros SET
-            nombres=%s,apellidos=%s,cedula=%s,telefono=%s,direccion=%s,correo=%s,
-            fecha_ingreso=%s,categoria=%s,ciudad_nacimiento=%s,fecha_nacimiento=%s,
-            genero=%s,ciudad_residencia=%s
-            WHERE id=%s""",
-            (d["nombres"].strip(),d["apellidos"].strip(),d["cedula"].strip(),
-             d["telefono"].strip(),d["direccion"].strip(),d["correo"].strip(),
-             parse_fecha(d["fecha_ingreso"]),d["categoria"].strip(),
-             d["ciudad_nacimiento"].strip(),parse_fecha(d["fecha_nacimiento"]),
-             d["genero"].strip(),d["ciudad_residencia"].strip(),socio_id))
-        conn.commit(); release(conn)
-        return jsonify({"ok":True,"mensaje":"Afiliado actualizado."})
-    except Exception as e:
-        try: conn.rollback(); release(conn)
-        except: pass
-        return jsonify({"error":str(e)}), 500
+<!-- MODAL HISTORIAL -->
+<div class="modal-bg" id="m-hist" onclick="bgc(event,'m-hist')">
+  <div class="modal">
+    <div class="mhdr">
+      <div><h2>📋 Agregar Registro</h2><p id="m-hist-sub">Elegí una plantilla</p></div>
+      <button class="xbtn" onclick="closeModal('m-hist')">✕</button>
+    </div>
+    <div class="mbody">
+      <div class="f" style="margin-bottom:14px">
+        <label>Plantilla</label>
+        <select id="h-plt" onchange="cargarCamposPlantilla()">
+          <option value="">— Elegí una plantilla —</option>
+        </select>
+      </div>
+      <div id="h-campos"></div>
+    </div>
+    <div class="mfoot">
+      <button class="btn-c" onclick="closeModal('m-hist')">Cancelar</button>
+      <button class="btn" id="btn-hist" onclick="enviarHistorial()" disabled>💾 Guardar Registro</button>
+    </div>
+  </div>
+</div>
 
-# ── Plantillas ─────────────────────────────────────────────────────────────
-@app.route("/api/plantillas")
-def get_plantillas():
-    try:
-        conn = get_conn(); cur = conn.cursor()
-        cur.execute("SELECT id,nombre FROM hist_plantillas WHERE activa=true ORDER BY nombre")
-        plts=[{"id":r[0],"nombre":r[1]} for r in cur.fetchall()]
-        release(conn); return jsonify(plts)
-    except Exception as e:
-        return jsonify({"error":str(e)}), 500
+<div id="toast"></div>
+<script>
+let CLUBS=[],CATS=[],PLTS=[],H_CAMPOS=[];
+let CLUB_ACTIVO=null,AFILIADO_ACTIVO=null,EDITANDO_ID=null;
+const g=id=>document.getElementById(id);
+const v=id=>g(id)?.value?.trim()||'';
+const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-@app.route("/api/plantillas/<int:plt_id>/campos")
-def get_campos(plt_id):
-    try:
-        conn = get_conn(); cur = conn.cursor()
-        cur.execute("SELECT id,etiqueta,tipo FROM hist_campos WHERE plantilla_id=%s ORDER BY orden",
-                    (plt_id,))
-        campos=[{"id":r[0],"etiqueta":r[1],"tipo":r[2]} for r in cur.fetchall()]
-        release(conn); return jsonify(campos)
-    except Exception as e:
-        return jsonify({"error":str(e)}), 500
+// ── Token de acceso individual ──────────────────────────────────────────────
+const URL_TOKEN = new URLSearchParams(window.location.search).get('club');
+// Si hay token en la URL, este club NO puede ver ni agregar otros clubs
+const MODO_CLUB = !!URL_TOKEN;
 
-# ── Historial ──────────────────────────────────────────────────────────────
-@app.route("/api/afiliados/<int:socio_id>/historial")
-def get_historial(socio_id):
-    try:
-        conn = get_conn(); cur = conn.cursor()
-        cur.execute("""SELECT hr.id, hp.nombre AS plantilla,
-                              TO_CHAR(hr.creado_en,'DD/MM/YYYY') AS fecha
-                       FROM hist_registros hr
-                       JOIN hist_plantillas hp ON hp.id=hr.plantilla_id
-                       WHERE hr.socio_id=%s ORDER BY hr.id""", (socio_id,))
-        registros=[]
-        for rid, plt_nombre, fecha in cur.fetchall():
-            cur.execute("""SELECT hc.etiqueta, hv.valor, hc.tipo
-                           FROM hist_valores hv
-                           JOIN hist_campos hc ON hc.id=hv.campo_id
-                           WHERE hv.registro_id=%s ORDER BY hc.orden""", (rid,))
-            campos=[{"etiqueta":r[0],"valor":r[1],"tipo":r[2]} for r in cur.fetchall()]
-            registros.append({"id":rid,"plantilla":plt_nombre,"fecha":fecha,"campos":campos})
-        release(conn); return jsonify(registros)
-    except Exception as e:
-        return jsonify({"error":str(e)}), 500
+function toast(msg,tipo,ms=4000){
+  const d=document.createElement('div');d.className=`ti t${tipo}`;d.textContent=msg;
+  g('toast').appendChild(d);setTimeout(()=>d.remove(),ms);
+}
+function bgc(e,id){if(e.target===g(id))closeModal(id);}
+function openModal(id){g(id).classList.add('open');}
+function closeModal(id){
+  g(id).classList.remove('open');
+  if(id==='m-afil'){
+    g(id).querySelectorAll('input').forEach(e=>e.value='');
+    g(id).querySelectorAll('select').forEach(e=>e.selectedIndex=0);
+    g('edad-hint').hidden=true;EDITANDO_ID=null;
+  }
+  if(id==='m-hist'){g('h-plt').selectedIndex=0;g('h-campos').innerHTML='';g('btn-hist').disabled=true;}
+}
 
-@app.route("/api/afiliados/<int:socio_id>/historial", methods=["POST"])
-def add_historial(socio_id):
-    d = request.get_json(force=True) or {}
-    plt_id  = d.get("plantilla_id")
-    valores = d.get("valores", {})
-    if not plt_id: return jsonify({"error":"Falta plantilla_id"}), 400
-    try:
-        conn = get_conn(); cur = conn.cursor()
-        cur.execute("INSERT INTO hist_registros (socio_id,plantilla_id) VALUES (%s,%s) RETURNING id",
-                    (socio_id, plt_id))
-        reg_id = cur.fetchone()[0]
-        for campo_id, valor in valores.items():
-            cur.execute("INSERT INTO hist_valores (registro_id,campo_id,valor) VALUES (%s,%s,%s)",
-                        (reg_id, int(campo_id), str(valor)))
-        conn.commit(); release(conn)
-        return jsonify({"ok":True,"mensaje":"Registro guardado."})
-    except Exception as e:
-        try: conn.rollback(); release(conn)
-        except: pass
-        return jsonify({"error":str(e)}), 500
+// Navegación SPA
+const STACK=[];
+function goScreen(id,titulo,sub,onback){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  g(`s-${id}`).classList.add('active');
+  g('header-title').textContent=titulo||'AKP — Portal';
+  g('header-sub').textContent=sub||'';
+  STACK.push(onback||null);
+  g('btn-back').style.display='inline-flex';
+}
+function navBack(){
+  STACK.pop();
+  const fn=STACK[STACK.length-1];
+  if(fn){fn();}
+  else{
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    g('s-home').classList.add('active');
+    g('header-title').textContent='AKP — Portal';
+    g('header-sub').textContent='Base de datos de afiliados';
+    STACK.length=0;g('btn-back').style.display='none';
+  }
+}
 
-@app.route("/health")
-def health():
-    return "ok", 200
+async function cargarTodo(){
+  // Si hay token en la URL, cargamos SOLO ese club directamente
+  if(MODO_CLUB){
+    // Ocultar botón "Agregar Club" — los clubs no pueden crear otros clubs
+    const btnAgregar = document.querySelector('[onclick="openModal(\'m-club\')"]');
+    if(btnAgregar) btnAgregar.style.display='none';
+    try{
+      const r = await fetch(`/api/mi-club/${URL_TOKEN}`);
+      if(!r.ok){ g('clubs-grid').innerHTML='<div style="color:var(--ts);padding:8px">Link inválido o club no encontrado.</div>'; return; }
+      const club = await r.json();
+      CLUBS = [club];
+      // Cargar categorías y plantillas en paralelo
+      const[rc,rp]=await Promise.all([fetch('/api/categorias'),fetch('/api/plantillas')]);
+      if(rc.ok) CATS=await rc.json();
+      if(rp.ok) PLTS=await rp.json();
+      const sel=g('a-cat');sel.innerHTML='<option value="">— Seleccioná —</option>';
+      CATS.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
+      const sp=g('h-plt');sp.innerHTML='<option value="">— Elegí una plantilla —</option>';
+      PLTS.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.nombre;sp.appendChild(o);});
+      // Entrar directo al club sin pasar por el home
+      abrirClub(club.id);
+    }catch(e){ g('clubs-grid').innerHTML='<div style="color:var(--ts);padding:8px">Error de conexión.</div>'; }
+    return;
+  }
+  // Modo normal (sin token) — ve todos los clubs
+  const[rc,rk,rp]=await Promise.all([fetch('/api/categorias'),fetch('/api/clubs'),fetch('/api/plantillas')]);
+  if(rc.ok) CATS=await rc.json();
+  if(rk.ok) CLUBS=await rk.json();
+  if(rp.ok) PLTS=await rp.json();
+  renderClubs();
+  const sel=g('a-cat');sel.innerHTML='<option value="">— Seleccioná —</option>';
+  CATS.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
+  const sp=g('h-plt');sp.innerHTML='<option value="">— Elegí una plantilla —</option>';
+  PLTS.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.nombre;sp.appendChild(o);});
+}
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5001)))
+function renderClubs(){
+  const gr=g('clubs-grid');
+  if(!CLUBS.length){gr.innerHTML='<div style="color:var(--ts);font-size:.85rem;padding:8px">No hay clubs registrados.</div>';return;}
+  gr.innerHTML=CLUBS.map(c=>`
+    <div class="club-card" onclick="abrirClub(${c.id})">
+      <div class="club-icon">🏫</div>
+      <div class="club-nombre">${esc(c.nombre)}</div>
+      <div class="club-meta">📍 ${esc(c.ciudad||'—')}</div>
+      <div class="club-meta">👤 ${esc(c.nombres_dueno)} ${esc(c.apellidos_dueno)}</div>
+      <span class="badge ${c.estado==='activo'?'activo':'otro'}">${esc(c.estado)}</span>
+    </div>`).join('');
+}
+
+async function abrirClub(club_id){
+  CLUB_ACTIVO=CLUBS.find(c=>c.id===club_id);
+  if(!CLUB_ACTIVO)return;
+  g('ch-nombre').textContent=CLUB_ACTIVO.nombre;
+  g('ch-meta').textContent=`📍 ${CLUB_ACTIVO.ciudad||'—'}  ·  👤 ${CLUB_ACTIVO.nombres_dueno} ${CLUB_ACTIVO.apellidos_dueno}`;
+  // Mostrar el link del club en el hero (tanto para admin como para el club)
+  const tokenClub = CLUB_ACTIVO.token || URL_TOKEN;
+  if(tokenClub){
+    const link=`${location.origin}/panel?club=${tokenClub}`;
+    const wrap=g('ch-link-wrap');
+    wrap.innerHTML=`🔗 Link del club: <strong>${esc(link)}</strong>
+      <button onclick="navigator.clipboard.writeText('${link}').then(()=>toast('✅ Copiado','ok'))"
+        style="margin-left:6px;background:rgba(255,255,255,.2);border:none;color:#fff;padding:2px 8px;border-radius:5px;cursor:pointer;font-size:.7rem">📋 Copiar</button>`;
+    wrap.style.display='block';
+  }
+  goScreen('club',CLUB_ACTIVO.nombre,'Afiliados del club',()=>{
+    goScreen('club',CLUB_ACTIVO.nombre,'Afiliados del club');
+    cargarAfiliados(CLUB_ACTIVO.id);
+  });
+  cargarAfiliados(club_id);
+}
+
+async function cargarAfiliados(club_id){
+  const body=g('tabla-body');
+  body.innerHTML='<div class="t-empty">Cargando...</div>';
+  try{
+    const r=await fetch(`/api/clubs/${club_id}/afiliados`);
+    const data=await r.json();
+    if(!r.ok){body.innerHTML=`<div class="t-empty">Error: ${esc(data.error)}</div>`;return;}
+    if(!data.length){body.innerHTML='<div class="t-empty">Sin afiliados en este club aún.</div>';return;}
+    body.innerHTML=data.map(m=>`
+      <div class="t-row cols7" onclick='abrirFicha(${JSON.stringify(m)})'>
+        <span style="font-size:.71rem;color:var(--ts);font-weight:600">#${m.id}</span>
+        <span>${esc(m.nombres)}</span><span>${esc(m.apellidos)}</span>
+        <span>${esc(m.cedula)}</span><span>${esc(m.categoria||'—')}</span>
+        <span>${m.edad||'—'}</span><span>${esc(m.ciudad_residencia||'—')}</span>
+      </div>`).join('');
+  }catch(e){body.innerHTML='<div class="t-empty">Error de conexión.</div>';}
+}
+
+function abrirFicha(m){
+  if(typeof m==='string') m=JSON.parse(m);
+  AFILIADO_ACTIVO=m;
+  g('fh-nombre').textContent=`${m.nombres} ${m.apellidos}`;
+  g('fh-meta').textContent=`${m.categoria||'—'}  ·  Cédula: ${m.cedula}  ·  ${m.edad||'—'} años`;
+  const datos=[['Nombres',m.nombres],['Apellidos',m.apellidos],['Cédula',m.cedula],
+    ['Teléfono',m.telefono||'—'],['Correo',m.correo||'—'],['Género',m.genero||'—'],
+    ['Ciudad Nac.',m.ciudad_nacimiento||'—'],['Ciudad Res.',m.ciudad_residencia||'—'],
+    ['Fecha Nac.',m.fecha_nacimiento||'—'],['Fecha Ing.',m.fecha_ingreso||'—'],
+    ['Categoría',m.categoria||'—'],['Edad',`${m.edad||'—'} años`]];
+  g('ficha-datos').innerHTML=datos.map(([l,v])=>`
+    <div class="fdato"><div class="lbl">${esc(l)}</div><div class="val">${esc(String(v))}</div></div>`).join('');
+  goScreen('ficha',`${m.nombres} ${m.apellidos}`,CLUB_ACTIVO?.nombre||'',()=>{
+    goScreen('ficha',`${m.nombres} ${m.apellidos}`,CLUB_ACTIVO?.nombre||'');
+    cargarHistorial(m.id);
+  });
+  cargarHistorial(m.id);
+}
+
+async function cargarHistorial(socio_id){
+  const wrap=g('historial-wrap');
+  wrap.innerHTML='<div class="t-empty">Cargando historial...</div>';
+  try{
+    const r=await fetch(`/api/afiliados/${socio_id}/historial`);
+    const data=await r.json();
+    if(!r.ok){wrap.innerHTML=`<div class="t-empty">Error: ${esc(data.error)}</div>`;return;}
+    if(!data.length){wrap.innerHTML='<div class="t-empty">Sin registros de historial aún.</div>';return;}
+    wrap.innerHTML=data.map(reg=>`
+      <div class="hist-card">
+        <div class="hist-hdr">
+          <strong>📋 ${esc(reg.plantilla)}</strong>
+        </div>
+        <div class="hist-body">
+          ${reg.campos.map(c=>`
+            <div class="hcampo ${c.tipo==='redaccion'?'full':''}">
+              <div class="hl">${esc(c.etiqueta)}</div>
+              <div class="hv" style="${c.tipo==='redaccion'?'white-space:pre-wrap':''}">${esc(c.valor||'—')}</div>
+            </div>`).join('')}
+        </div>
+      </div>`).join('');
+  }catch(e){wrap.innerHTML='<div class="t-empty">Error de conexión.</div>';}
+}
+
+function openAfiliadoNew(){
+  EDITANDO_ID=null;
+  g('m-afil-title').textContent='➕ Nuevo Afiliado';
+  g('m-afil-sub').textContent=`Agregar a: ${CLUB_ACTIVO?.nombre||'—'}`;
+  g('a-fing').value=new Date().toISOString().split('T')[0];
+  openModal('m-afil');
+}
+
+function openAfiliadoEdit(){
+  if(!AFILIADO_ACTIVO)return;
+  EDITANDO_ID=AFILIADO_ACTIVO.id;
+  g('m-afil-title').textContent='✏️ Editar Afiliado';
+  g('m-afil-sub').textContent=`${AFILIADO_ACTIVO.nombres} ${AFILIADO_ACTIVO.apellidos}`;
+  const m=AFILIADO_ACTIVO;
+  const toISO=s=>{if(!s||!s.includes('/'))return s||'';const[d,mo,y]=s.split('/');return`${y}-${mo}-${d}`;};
+  g('a-nomb').value=m.nombres||''; g('a-apel').value=m.apellidos||'';
+  g('a-ced').value=m.cedula||'';   g('a-tel').value=m.telefono||'';
+  g('a-dir').value=m.direccion||'';g('a-cor').value=m.correo||'';
+  g('a-cnac').value=m.ciudad_nacimiento||''; g('a-cres').value=m.ciudad_residencia||'';
+  g('a-fnac').value=toISO(m.fecha_nacimiento); g('a-fing').value=toISO(m.fecha_ingreso);
+  g('a-cat').value=m.categoria||''; g('a-gen').value=m.genero||'';
+  openModal('m-afil');
+}
+
+function calcEdad(){
+  const fn=new Date(g('a-fnac').value);
+  if(!g('a-fnac').value){g('edad-hint').hidden=true;return;}
+  const h=new Date();let a=h.getFullYear()-fn.getFullYear();
+  if(h.getMonth()-fn.getMonth()<0||(h.getMonth()-fn.getMonth()===0&&h.getDate()<fn.getDate()))a--;
+  g('edad-val').textContent=a;g('edad-hint').hidden=false;
+}
+
+async function enviarAfiliado(){
+  const req=['a-nomb','a-apel','a-ced','a-tel','a-dir','a-cor','a-cnac','a-cres','a-fnac','a-fing','a-cat','a-gen'];
+  if(req.some(id=>!v(id))){toast('⚠️ Completá todos los campos.','err');return;}
+  const payload={nombres:v('a-nomb'),apellidos:v('a-apel'),cedula:v('a-ced'),
+    telefono:v('a-tel'),direccion:v('a-dir'),correo:v('a-cor'),
+    ciudad_nacimiento:v('a-cnac'),ciudad_residencia:v('a-cres'),
+    fecha_nacimiento:g('a-fnac').value,fecha_ingreso:g('a-fing').value,
+    categoria:v('a-cat'),genero:v('a-gen'),club_id:CLUB_ACTIVO?.id||null};
+  const btn=g('btn-afil');btn.disabled=true;btn.textContent='Guardando...';
+  try{
+    const url=EDITANDO_ID?`/api/afiliados/${EDITANDO_ID}`:'/api/registrar';
+    const method=EDITANDO_ID?'PUT':'POST';
+    const r=await fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const res=await r.json();
+    if(r.ok){
+      toast(`✅ ${res.mensaje}`,'ok');closeModal('m-afil');
+      if(EDITANDO_ID){AFILIADO_ACTIVO={...AFILIADO_ACTIVO,...payload};abrirFicha(AFILIADO_ACTIVO);}
+      else cargarAfiliados(CLUB_ACTIVO.id);
+    }else toast(`❌ ${res.error}`,'err');
+  }catch(e){toast('❌ Error de conexión.','err');}
+  finally{btn.disabled=false;btn.textContent='✅ Guardar';}
+}
+
+async function cargarCamposPlantilla(){
+  const pid=g('h-plt').value;
+  const wrap=g('h-campos');const btn=g('btn-hist');
+  if(!pid){wrap.innerHTML='';btn.disabled=true;return;}
+  try{
+    const r=await fetch(`/api/plantillas/${pid}/campos`);
+    H_CAMPOS=await r.json();
+    wrap.innerHTML=`<div class="grid2">${H_CAMPOS.map(c=>`
+      <div class="f ${c.tipo==='redaccion'?'full':''}">
+        <label>${esc(c.etiqueta)}</label>
+        ${c.tipo==='fecha'?`<input type="date" id="hc-${c.id}">`:
+          c.tipo==='redaccion'?`<textarea id="hc-${c.id}" rows="4" maxlength="200" placeholder="Máx 200 caracteres"></textarea>`:
+          `<input id="hc-${c.id}" type="text">`}
+      </div>`).join('')}</div>`;
+    btn.disabled=false;
+  }catch(e){wrap.innerHTML='<div class="t-empty">Error al cargar campos.</div>';}
+}
+
+async function enviarHistorial(){
+  if(!AFILIADO_ACTIVO||!g('h-plt').value)return;
+  const plt_id=parseInt(g('h-plt').value);
+  const valores={};
+  H_CAMPOS.forEach(c=>{const el=g(`hc-${c.id}`);if(el)valores[c.id]=el.value.trim();});
+  const btn=g('btn-hist');btn.disabled=true;btn.textContent='Guardando...';
+  try{
+    const r=await fetch(`/api/afiliados/${AFILIADO_ACTIVO.id}/historial`,
+      {method:'POST',headers:{'Content-Type':'application/json'},
+       body:JSON.stringify({plantilla_id:plt_id,valores})});
+    const res=await r.json();
+    if(r.ok){toast('✅ Registro guardado.','ok');closeModal('m-hist');cargarHistorial(AFILIADO_ACTIVO.id);}
+    else toast(`❌ ${res.error}`,'err');
+  }catch(e){toast('❌ Error de conexión.','err');}
+  finally{btn.disabled=false;btn.textContent='💾 Guardar Registro';}
+}
+
+async function enviarClub(){
+  if(!v('c-nombre')||!v('c-nomb')||!v('c-apel')||!v('c-ced')){toast('⚠️ Completá los campos obligatorios.','err');return;}
+  const btn=g('btn-club');btn.disabled=true;btn.textContent='Guardando...';
+  try{
+    const r=await fetch('/api/clubs',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({nombre:v('c-nombre'),ciudad:v('c-ciudad'),estado:v('c-estado'),
+        nombres_dueno:v('c-nomb'),apellidos_dueno:v('c-apel'),cedula_dueno:v('c-ced')})});
+    const res=await r.json();
+    if(r.ok){
+      CLUBS=res.clubs||[];
+      renderClubs();
+      // Armar el link único del club
+      const link=`${location.origin}/panel?club=${res.token}`;
+      const waMsg=encodeURIComponent(`🥋 Hola! Aquí está tu link de acceso al portal AKP:\n${link}`);
+      // Mostrar el link en el modal en vez de cerrarlo
+      g('m-club').querySelector('.mbody').innerHTML=`
+        <div style="text-align:center;padding:8px 0">
+          <div style="font-size:2rem;margin-bottom:8px">✅</div>
+          <div style="font-size:.95rem;font-weight:700;color:var(--p);margin-bottom:4px">${esc(v('c-nombre'))} creado</div>
+          <div style="font-size:.78rem;color:var(--ts);margin-bottom:16px">Compartí este link con el club:</div>
+          <div style="background:var(--f);border:1px solid var(--b);border-radius:10px;padding:10px 12px;font-size:.78rem;word-break:break-all;color:var(--t);margin-bottom:14px">${esc(link)}</div>
+          <div style="display:flex;gap:8px;justify-content:center">
+            <button class="btn btn-sm" onclick="navigator.clipboard.writeText('${link}').then(()=>toast('✅ Link copiado','ok'))">📋 Copiar link</button>
+            <a href="https://wa.me/?text=${waMsg}" target="_blank" class="btn btn-sm" style="background:#25D366;text-decoration:none">📲 WhatsApp</a>
+          </div>
+        </div>`;
+      g('m-club').querySelector('.mfoot').innerHTML=`<button class="btn-c" onclick="closeModal('m-club');location.reload()">Cerrar</button>`;
+    }else toast('❌ '+res.error,'err');
+  }catch(e){toast('❌ Error de conexión.','err');}
+  finally{btn.disabled=false;btn.textContent='💾 Guardar Club';}
+}
+
+// ── Asistencia ──────────────────────────────────────────────────────────────
+let ASIST_CLUB=null, ASIST_AFILIADOS=[], ASIST_RESUMEN={}, ASIST_DIA=null, ASIST_DIA_DATA={};
+let CAL_YEAR=new Date().getFullYear(), CAL_MONTH=new Date().getMonth();
+const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DIAS_SHORT=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+
+async function abrirAsistencia(club_id){
+  ASIST_CLUB=CLUBS.find(c=>c.id===club_id);
+  if(!ASIST_CLUB)return;
+  ASIST_DIA=null; ASIST_DIA_DATA={};
+  CAL_YEAR=new Date().getFullYear(); CAL_MONTH=new Date().getMonth();
+  g('asist-club-nombre').textContent=ASIST_CLUB.nombre;
+  g('asist-club-meta').textContent=`📍 ${ASIST_CLUB.ciudad||'—'} · Control de Asistencia`;
+  g('asist-lista').innerHTML='<div class="asist-placeholder">📅 Seleccioná un día en el calendario para registrar asistencia.</div>';
+  goScreen('asist',`Asistencia — ${ASIST_CLUB.nombre}`,'Control de asistencia',()=>{
+    goScreen('asist',`Asistencia — ${ASIST_CLUB.nombre}`,'Control de asistencia');
+  });
+  // Cargar afiliados y resumen en paralelo
+  const[ra,rr]=await Promise.all([
+    fetch(`/api/clubs/${club_id}/afiliados`),
+    fetch(`/api/clubs/${club_id}/asistencia/resumen`)
+  ]);
+  if(ra.ok) ASIST_AFILIADOS=await ra.json(); else ASIST_AFILIADOS=[];
+  if(rr.ok) ASIST_RESUMEN=await rr.json(); else ASIST_RESUMEN={};
+  renderCal();
+}
+
+function calPrev(){CAL_MONTH--;if(CAL_MONTH<0){CAL_MONTH=11;CAL_YEAR--;}renderCal();}
+function calNext(){CAL_MONTH++;if(CAL_MONTH>11){CAL_MONTH=0;CAL_YEAR++;}renderCal();}
+
+function renderCal(){
+  g('cal-titulo').textContent=`${MESES[CAL_MONTH]} ${CAL_YEAR}`;
+  const grid=g('cal-grid');
+  const hoy=new Date(); const hoyStr=`${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
+  // Cabecera días
+  let html=DIAS_SHORT.map(d=>`<div class="cal-dow">${d}</div>`).join('');
+  const primerDia=new Date(CAL_YEAR,CAL_MONTH,1).getDay();
+  const diasMes=new Date(CAL_YEAR,CAL_MONTH+1,0).getDate();
+  for(let i=0;i<primerDia;i++) html+=`<div class="cal-day empty"></div>`;
+  for(let d=1;d<=diasMes;d++){
+    const dateStr=`${CAL_YEAR}-${String(CAL_MONTH+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isHoy=dateStr===hoyStr;
+    const isSel=dateStr===ASIST_DIA;
+    const hasData=ASIST_RESUMEN[dateStr];
+    const soloAus=hasData && hasData.presentes===0;
+    html+=`<div class="cal-day${isHoy?' today':''}${isSel?' selected':''}${hasData?' has-data':''}${soloAus?' solo-ausentes':''}" onclick="selDia('${dateStr}')">
+      ${d}${hasData?'<span class="dot"></span>':''}
+    </div>`;
+  }
+  grid.innerHTML=html;
+}
+
+async function selDia(dateStr){
+  ASIST_DIA=dateStr;
+  renderCal();
+  const lista=g('asist-lista');
+  lista.innerHTML='<div class="asist-placeholder">Cargando...</div>';
+  // Cargar asistencia del día
+  try{
+    const r=await fetch(`/api/clubs/${ASIST_CLUB.id}/asistencia?fecha=${dateStr}`);
+    ASIST_DIA_DATA=r.ok?(await r.json()):{};
+  }catch(e){ASIST_DIA_DATA={};}
+  renderListaAsistencia(dateStr);
+}
+
+function renderListaAsistencia(dateStr){
+  const lista=g('asist-lista');
+  if(!ASIST_AFILIADOS.length){
+    lista.innerHTML='<div class="asist-fecha-hdr">'+esc(dateStr)+'</div><div class="asist-placeholder">No hay afiliados en este club.</div>';
+    return;
+  }
+  const [y,m,d]=dateStr.split('-');
+  const fechaLegible=`${d}/${m}/${y}`;
+  let presentes=0,ausentes=0,sinReg=0;
+  ASIST_AFILIADOS.forEach(a=>{
+    const est=ASIST_DIA_DATA[String(a.id)]||'sin_registro';
+    if(est==='presente')presentes++;
+    else if(est==='ausente')ausentes++;
+    else sinReg++;
+  });
+  const rows=ASIST_AFILIADOS.map(a=>{
+    const sid=String(a.id);
+    const est=ASIST_DIA_DATA[sid]||'sin_registro';
+    return `<div class="asist-row" id="ar-${a.id}">
+      <div>
+        <div class="asist-nombre">${esc(a.nombres)} ${esc(a.apellidos)}</div>
+        <div class="asist-cat">${esc(a.categoria||'—')} · #${a.id}</div>
+      </div>
+      <div class="asist-btns">
+        <button class="ab ab-p${est==='presente'?' active':''}" onclick="setAsist(${a.id},'presente')" title="Presente">✅ P</button>
+        <button class="ab ab-a${est==='ausente'?' active':''}" onclick="setAsist(${a.id},'ausente')" title="Ausente">❌ A</button>
+        <button class="ab ab-s${est==='sin_registro'?' active':''}" onclick="setAsist(${a.id},'sin_registro')" title="Sin registro">⬜ —</button>
+      </div>
+    </div>`;
+  }).join('');
+  lista.innerHTML=`
+    <div class="asist-fecha-hdr">📅 ${fechaLegible}</div>
+    ${rows}
+    <div class="asist-footer">
+      <div class="asist-resumen">✅ ${presentes} presentes · ❌ ${ausentes} ausentes · ⬜ ${sinReg} sin registro</div>
+      <button class="btn btn-green btn-sm" onclick="guardarAsistencia()">💾 Guardar</button>
+    </div>`;
+}
+
+function setAsist(socio_id,estado){
+  ASIST_DIA_DATA[String(socio_id)]=estado;
+  renderListaAsistencia(ASIST_DIA);
+}
+
+async function guardarAsistencia(){
+  if(!ASIST_DIA||!ASIST_CLUB)return;
+  const registros=ASIST_AFILIADOS.map(a=>({socio_id:a.id,estado:ASIST_DIA_DATA[String(a.id)]||'sin_registro'}));
+  const btn=document.querySelector('.asist-footer .btn');
+  if(btn){btn.disabled=true;btn.textContent='Guardando...';}
+  try{
+    const r=await fetch(`/api/clubs/${ASIST_CLUB.id}/asistencia`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({fecha:ASIST_DIA,registros})
+    });
+    const res=await r.json();
+    if(r.ok){
+      toast('✅ Asistencia guardada.','ok');
+      // Actualizar resumen local
+      const conRegistro=registros.filter(x=>x.estado!=='sin_registro').length;
+      if(conRegistro>0){
+        const presentes=registros.filter(x=>x.estado==='presente').length;
+        const ausentes=registros.filter(x=>x.estado==='ausente').length;
+        ASIST_RESUMEN[ASIST_DIA]={presentes,ausentes,total:conRegistro};
+      } else delete ASIST_RESUMEN[ASIST_DIA];
+      renderCal();
+    }else toast(`❌ ${res.error}`,'err');
+  }catch(e){toast('❌ Error de conexión.','err');}
+  finally{if(btn){btn.disabled=false;btn.textContent='💾 Guardar';}}
+}
+
+function openEditarClub(){
+  if(!CLUB_ACTIVO) return;
+  g('ec-nombre').value = CLUB_ACTIVO.nombre || '';
+  g('ec-ciudad').value = CLUB_ACTIVO.ciudad || '';
+  g('ec-estado').value = CLUB_ACTIVO.estado || 'activo';
+  g('ec-nomb').value   = CLUB_ACTIVO.nombres_dueno || '';
+  g('ec-apel').value   = CLUB_ACTIVO.apellidos_dueno || '';
+  g('ec-ced').value    = CLUB_ACTIVO.cedula_dueno || '';
+  openModal('m-edit-club');
+}
+
+async function enviarEditarClub(){
+  if(!CLUB_ACTIVO) return;
+  if(!g('ec-nomb').value.trim()||!g('ec-apel').value.trim()||!g('ec-ced').value.trim()){
+    toast('⚠️ Nombres, apellidos y cédula son obligatorios.','err'); return;
+  }
+  const btn=g('btn-edit-club'); btn.disabled=true; btn.textContent='Guardando...';
+  try{
+    const r=await fetch(`/api/clubs/${CLUB_ACTIVO.id}`,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        ciudad:       g('ec-ciudad').value.trim(),
+        estado:       g('ec-estado').value,
+        nombres_dueno:  g('ec-nomb').value.trim(),
+        apellidos_dueno:g('ec-apel').value.trim(),
+        cedula_dueno:   g('ec-ced').value.trim()
+      })
+    });
+    const res=await r.json();
+    if(r.ok){
+      toast('✅ Club actualizado.','ok');
+      closeModal('m-edit-club');
+      // Actualizar datos locales y el hero
+      CLUB_ACTIVO={...CLUB_ACTIVO,
+        ciudad:g('ec-ciudad').value.trim(),
+        estado:g('ec-estado').value,
+        nombres_dueno:g('ec-nomb').value.trim(),
+        apellidos_dueno:g('ec-apel').value.trim(),
+        cedula_dueno:g('ec-ced').value.trim()
+      };
+      g('ch-meta').textContent=`📍 ${CLUB_ACTIVO.ciudad||'—'}  ·  👤 ${CLUB_ACTIVO.nombres_dueno} ${CLUB_ACTIVO.apellidos_dueno}`;
+      // Actualizar en la lista local
+      const idx=CLUBS.findIndex(c=>c.id===CLUB_ACTIVO.id);
+      if(idx>-1) CLUBS[idx]={...CLUBS[idx],...CLUB_ACTIVO};
+    } else toast(`❌ ${res.error}`,'err');
+  }catch(e){ toast('❌ Error de conexión.','err'); }
+  finally{ btn.disabled=false; btn.textContent='💾 Guardar cambios'; }
+}
+
+cargarTodo();
+</script>
+</body>
+</html>
