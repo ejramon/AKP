@@ -71,6 +71,7 @@ header{background:var(--p);padding:12px 20px;display:flex;align-items:center;gap
       <div class="f"><label>Apellidos *</label><input id="c-apel"></div>
       <div class="f"><label>Cédula *</label><input id="c-ced" inputmode="numeric" maxlength="20"></div>
       <div class="f"><label>Contacto (Teléfono) *</label><input id="c-tel" inputmode="tel" placeholder="Ej: 0991234567"></div>
+      <div class="f full"><label>Dirección *</label><input id="c-dir" placeholder="Ej: Av. Amazonas y Naciones Unidas"></div>
     </div>
     <button class="btn" id="btn-reg" onclick="registrarClub()">🏫 Registrar mi club</button>
   </div>
@@ -104,14 +105,14 @@ function toast(msg,tipo,ms=4000){
 }
 
 async function registrarClub(){
-  if(!v('c-nombre')||!v('c-nomb')||!v('c-apel')||!v('c-ced')||!v('c-tel')){
+  if(!v('c-nombre')||!v('c-nomb')||!v('c-apel')||!v('c-ced')||!v('c-tel')||!v('c-dir')){
     toast('⚠️ Completa los campos obligatorios.','err'); return;
   }
   const btn=g('btn-reg'); btn.disabled=true; btn.textContent='Registrando...';
   try{
     const r=await fetch('/api/clubs',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({nombre:v('c-nombre'),ciudad:v('c-ciudad'),estado:v('c-estado'),
-        nombres_dueno:v('c-nomb'),apellidos_dueno:v('c-apel'),cedula_dueno:v('c-ced'),telefono:v('c-tel')})});
+        nombres_dueno:v('c-nomb'),apellidos_dueno:v('c-apel'),cedula_dueno:v('c-ced'),telefono:v('c-tel'),direccion:v('c-dir')})});
     const res=await r.json();
     if(r.ok){
       LINK_GENERADO=`${location.origin}/panel?club=${res.token}`;
