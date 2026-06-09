@@ -90,9 +90,9 @@ def get_clubs():
     try:
         conn = get_conn(); cur = conn.cursor()
         cur.execute("""SELECT id,nombre,ciudad,estado,
-                              nombres_dueno,apellidos_dueno,cedula_dueno,token
+                              nombres_dueno,apellidos_dueno,cedula_dueno,telefono,token
                        FROM clubs ORDER BY nombre""")
-        cols=["id","nombre","ciudad","estado","nombres_dueno","apellidos_dueno","cedula_dueno","token"]
+        cols=["id","nombre","ciudad","estado","nombres_dueno","apellidos_dueno","cedula_dueno","telefono","token"]
         clubs=[dict(zip(cols,r)) for r in cur.fetchall()]
         return jsonify(clubs)
     except Exception as e:
@@ -105,7 +105,7 @@ def get_clubs():
 @app.route("/api/clubs", methods=["POST"])
 def crear_club():
     d = request.get_json(force=True) or {}
-    req=["nombre","nombres_dueno","apellidos_dueno","cedula_dueno"]
+    req=["nombre","nombres_dueno","apellidos_dueno","cedula_dueno","telefono"]
     vacios=[c for c in req if not str(d.get(c,"")).strip()]
     if vacios: return jsonify({"error":f"Faltan: {', '.join(vacios)}"}), 400
     conn = None
@@ -113,16 +113,17 @@ def crear_club():
         conn = get_conn(); cur = conn.cursor()
         token = secrets.token_urlsafe(8)   # genera token único ej: "a3f9k2Xw"
         cur.execute("""INSERT INTO clubs
-            (nombre,ciudad,estado,nombres_dueno,apellidos_dueno,cedula_dueno,password_hash,debe_cambiar_pass,token)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,true,%s)""",
+            (nombre,ciudad,estado,nombres_dueno,apellidos_dueno,cedula_dueno,telefono,password_hash,debe_cambiar_pass,token)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,true,%s)""",
             (d["nombre"].strip(),d.get("ciudad","").strip(),
              d.get("estado","activo"),d["nombres_dueno"].strip(),
              d["apellidos_dueno"].strip(),d["cedula_dueno"].strip(),
+             d["telefono"].strip(),
              hash_val(d["cedula_dueno"]),token))
         conn.commit()
-        cur.execute("""SELECT id,nombre,ciudad,estado,nombres_dueno,apellidos_dueno,cedula_dueno,token
+        cur.execute("""SELECT id,nombre,ciudad,estado,nombres_dueno,apellidos_dueno,cedula_dueno,telefono,token
                        FROM clubs ORDER BY nombre""")
-        cols=["id","nombre","ciudad","estado","nombres_dueno","apellidos_dueno","cedula_dueno","token"]
+        cols=["id","nombre","ciudad","estado","nombres_dueno","apellidos_dueno","cedula_dueno","telefono","token"]
         clubs=[dict(zip(cols,r)) for r in cur.fetchall()]
         return jsonify({"ok":True,"mensaje":"Club creado correctamente.","clubs":clubs,"token":token})
     except Exception as e:
@@ -139,7 +140,7 @@ def crear_club():
 @app.route("/api/clubs/<int:club_id>", methods=["PUT"])
 def editar_club(club_id):
     d = request.get_json(force=True) or {}
-    req = ["nombres_dueno","apellidos_dueno","cedula_dueno"]
+    req = ["nombres_dueno","apellidos_dueno","cedula_dueno","telefono"]
     vacios = [c for c in req if not str(d.get(c,"")).strip()]
     if vacios: return jsonify({"error":f"Faltan: {', '.join(vacios)}"}), 400
     conn = None
@@ -147,11 +148,11 @@ def editar_club(club_id):
         conn = get_conn(); cur = conn.cursor()
         cur.execute("""UPDATE clubs SET
             ciudad=%s, estado=%s,
-            nombres_dueno=%s, apellidos_dueno=%s, cedula_dueno=%s
+            nombres_dueno=%s, apellidos_dueno=%s, cedula_dueno=%s, telefono=%s
             WHERE id=%s""",
             (d.get("ciudad","").strip(), d.get("estado","activo"),
              d["nombres_dueno"].strip(), d["apellidos_dueno"].strip(),
-             d["cedula_dueno"].strip(), club_id))
+             d["cedula_dueno"].strip(), d["telefono"].strip(), club_id))
         conn.commit()
         return jsonify({"ok": True, "mensaje": "Club actualizado."})
     except Exception as e:
@@ -170,12 +171,12 @@ def mi_club(token):
     try:
         conn = get_conn(); cur = conn.cursor()
         cur.execute("""SELECT id,nombre,ciudad,estado,
-                              nombres_dueno,apellidos_dueno,cedula_dueno,token
+                              nombres_dueno,apellidos_dueno,cedula_dueno,telefono,token
                        FROM clubs WHERE token=%s""", (token,))
         row = cur.fetchone()
         if not row:
             return jsonify({"error": "Token inválido"}), 404
-        cols = ["id","nombre","ciudad","estado","nombres_dueno","apellidos_dueno","cedula_dueno","token"]
+        cols = ["id","nombre","ciudad","estado","nombres_dueno","apellidos_dueno","cedula_dueno","telefono","token"]
         return jsonify(dict(zip(cols, row)))
     except Exception as e:
         logger.error("mi_club: %s", e)
@@ -477,6 +478,11 @@ def init_db():
             IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'clubs_token_unique')
             THEN ALTER TABLE clubs ADD CONSTRAINT clubs_token_unique UNIQUE (token);
             END IF; END $$""")
+
+        # ── Columna telefono (contacto) en clubs ────────────────────────────
+        # Número de contacto del club. Clubs nuevos lo reciben al crearse;
+        # los antiguos quedan en cadena vacía hasta que el admin los edite.
+        cur.execute("ALTER TABLE clubs ADD COLUMN IF NOT EXISTS telefono VARCHAR(30) NOT NULL DEFAULT ''")
 
         conn.commit()
         logger.info("init_db: migraciones aplicadas correctamente.")
