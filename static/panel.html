@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AKP — Portal</title>
+<title>IKA — Portal</title>
 <style>
 :root{--p:#1A3A6B;--pd:#0F2347;--a:#2563EB;--t:#1E293B;--ts:#64748B;--b:#CBD5E1;--f:#F0F4F8;--s:#fff;--ok:#16A34A;--err:#DC2626;--warn:#D97706}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -140,7 +140,7 @@ header{background:var(--p);padding:12px 20px;display:flex;align-items:center;gap
 <header>
   <button class="btn-back" id="btn-back" onclick="navBack()">◀ Volver</button>
   <div style="font-size:1.4rem">🥋</div>
-  <div><div id="header-title">AKP — Panel Admin</div><div id="header-sub">Gestión de clubs y afiliados</div></div>
+  <div><div id="header-title">IKA — Panel Admin</div><div id="header-sub">Gestión de clubs y afiliados</div></div>
 </header>
 
 <!-- HOME -->
@@ -257,6 +257,7 @@ header{background:var(--p);padding:12px 20px;display:flex;align-items:center;gap
         <div class="f"><label>Nombres Responsable *</label><input id="ec-nomb"></div>
         <div class="f"><label>Apellidos Responsable *</label><input id="ec-apel"></div>
         <div class="f"><label>Cédula Responsable *</label><input id="ec-ced" inputmode="numeric" maxlength="20"></div>
+        <div class="f"><label>Contacto (Teléfono) *</label><input id="ec-tel" inputmode="tel" placeholder="Ej: 0991234567"></div>
       </div>
     </div>
     <div class="mfoot">
@@ -282,6 +283,7 @@ header{background:var(--p);padding:12px 20px;display:flex;align-items:center;gap
         <div class="f"><label>Nombres Responsable *</label><input id="c-nomb"></div>
         <div class="f"><label>Apellidos Responsable *</label><input id="c-apel"></div>
         <div class="f"><label>Cédula Responsable *</label><input id="c-ced" inputmode="numeric" maxlength="20"></div>
+        <div class="f"><label>Contacto (Teléfono) *</label><input id="c-tel" inputmode="tel" placeholder="Ej: 0991234567"></div>
       </div>
     </div>
     <div class="mfoot">
@@ -311,9 +313,9 @@ header{background:var(--p);padding:12px 20px;display:flex;align-items:center;gap
         <div class="f"><label>Fecha Nacimiento *</label><input id="a-fnac" type="date" oninput="calcEdad()"></div>
         <div class="f"><label>Fecha Ingreso *</label><input id="a-fing" type="date"></div>
         <div class="f"><label>Categoría *</label>
-          <select id="a-cat"><option value="">— Seleccioná —</option></select></div>
+          <select id="a-cat"><option value="">— Selecciona —</option></select></div>
         <div class="f"><label>Género *</label>
-          <select id="a-gen"><option value="">— Seleccioná —</option>
+          <select id="a-gen"><option value="">— Selecciona —</option>
             <option value="Hombre">Hombre</option><option value="Mujer">Mujer</option></select></div>
       </div>
       <div class="edad-hint" id="edad-hint" hidden>🎂 Edad calculada: <strong id="edad-val">—</strong> años</div>
@@ -329,14 +331,14 @@ header{background:var(--p);padding:12px 20px;display:flex;align-items:center;gap
 <div class="modal-bg" id="m-hist" onclick="bgc(event,'m-hist')">
   <div class="modal">
     <div class="mhdr">
-      <div><h2>📋 Agregar Registro</h2><p id="m-hist-sub">Elegí una plantilla</p></div>
+      <div><h2>📋 Agregar Registro</h2><p id="m-hist-sub">Elige una plantilla</p></div>
       <button class="xbtn" onclick="closeModal('m-hist')">✕</button>
     </div>
     <div class="mbody">
       <div class="f" style="margin-bottom:14px">
         <label>Plantilla</label>
         <select id="h-plt" onchange="cargarCamposPlantilla()">
-          <option value="">— Elegí una plantilla —</option>
+          <option value="">— Elige una plantilla —</option>
         </select>
       </div>
       <div id="h-campos"></div>
@@ -382,7 +384,7 @@ const STACK=[];
 function goScreen(id,titulo,sub,onback){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   g(`s-${id}`).classList.add('active');
-  g('header-title').textContent=titulo||'AKP — Portal';
+  g('header-title').textContent=titulo||'IKA — Portal';
   g('header-sub').textContent=sub||'';
   STACK.push(onback||null);
   g('btn-back').style.display='inline-flex';
@@ -394,7 +396,7 @@ function navBack(){
   else{
     document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
     g('s-home').classList.add('active');
-    g('header-title').textContent='AKP — Portal';
+    g('header-title').textContent='IKA — Portal';
     g('header-sub').textContent='Base de datos de afiliados';
     STACK.length=0;g('btn-back').style.display='none';
   }
@@ -415,9 +417,9 @@ async function cargarTodo(){
       const[rc,rp]=await Promise.all([fetch('/api/categorias'),fetch('/api/plantillas')]);
       if(rc.ok) CATS=await rc.json();
       if(rp.ok) PLTS=await rp.json();
-      const sel=g('a-cat');sel.innerHTML='<option value="">— Seleccioná —</option>';
+      const sel=g('a-cat');sel.innerHTML='<option value="">— Selecciona —</option>';
       CATS.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
-      const sp=g('h-plt');sp.innerHTML='<option value="">— Elegí una plantilla —</option>';
+      const sp=g('h-plt');sp.innerHTML='<option value="">— Elige una plantilla —</option>';
       PLTS.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.nombre;sp.appendChild(o);});
       // Entrar directo al club sin pasar por el home
       abrirClub(club.id);
@@ -430,9 +432,9 @@ async function cargarTodo(){
   if(rk.ok) CLUBS=await rk.json();
   if(rp.ok) PLTS=await rp.json();
   renderClubs();
-  const sel=g('a-cat');sel.innerHTML='<option value="">— Seleccioná —</option>';
+  const sel=g('a-cat');sel.innerHTML='<option value="">— Selecciona —</option>';
   CATS.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
-  const sp=g('h-plt');sp.innerHTML='<option value="">— Elegí una plantilla —</option>';
+  const sp=g('h-plt');sp.innerHTML='<option value="">— Elige una plantilla —</option>';
   PLTS.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.nombre;sp.appendChild(o);});
 }
 
@@ -453,7 +455,7 @@ async function abrirClub(club_id){
   CLUB_ACTIVO=CLUBS.find(c=>c.id===club_id);
   if(!CLUB_ACTIVO)return;
   g('ch-nombre').textContent=CLUB_ACTIVO.nombre;
-  g('ch-meta').textContent=`📍 ${CLUB_ACTIVO.ciudad||'—'}  ·  👤 ${CLUB_ACTIVO.nombres_dueno} ${CLUB_ACTIVO.apellidos_dueno}`;
+  g('ch-meta').textContent=`📍 ${CLUB_ACTIVO.ciudad||'—'}  ·  👤 ${CLUB_ACTIVO.nombres_dueno} ${CLUB_ACTIVO.apellidos_dueno}  ·  📞 ${CLUB_ACTIVO.telefono||'—'}`;
   // Mostrar el link del club en el hero (tanto para admin como para el club)
   const tokenClub = CLUB_ACTIVO.token || URL_TOKEN;
   if(tokenClub){
@@ -623,19 +625,19 @@ async function enviarHistorial(){
 }
 
 async function enviarClub(){
-  if(!v('c-nombre')||!v('c-nomb')||!v('c-apel')||!v('c-ced')){toast('⚠️ Completa los campos obligatorios.','err');return;}
+  if(!v('c-nombre')||!v('c-nomb')||!v('c-apel')||!v('c-ced')||!v('c-tel')){toast('⚠️ Completa los campos obligatorios.','err');return;}
   const btn=g('btn-club');btn.disabled=true;btn.textContent='Guardando...';
   try{
     const r=await fetch('/api/clubs',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({nombre:v('c-nombre'),ciudad:v('c-ciudad'),estado:v('c-estado'),
-        nombres_dueno:v('c-nomb'),apellidos_dueno:v('c-apel'),cedula_dueno:v('c-ced')})});
+        nombres_dueno:v('c-nomb'),apellidos_dueno:v('c-apel'),cedula_dueno:v('c-ced'),telefono:v('c-tel')})});
     const res=await r.json();
     if(r.ok){
       CLUBS=res.clubs||[];
       renderClubs();
       // Armar el link único del club
       const link=`${location.origin}/panel?club=${res.token}`;
-      const waMsg=encodeURIComponent(`🥋 Hola! Aquí está tu link de acceso al portal AKP:\n${link}`);
+      const waMsg=encodeURIComponent(`🥋 Hola! Aquí está tu link de acceso al portal IKA:\n${link}`);
       // Mostrar el link en el modal en vez de cerrarlo
       g('m-club').querySelector('.mbody').innerHTML=`
         <div style="text-align:center;padding:8px 0">
@@ -797,13 +799,14 @@ function openEditarClub(){
   g('ec-nomb').value   = CLUB_ACTIVO.nombres_dueno || '';
   g('ec-apel').value   = CLUB_ACTIVO.apellidos_dueno || '';
   g('ec-ced').value    = CLUB_ACTIVO.cedula_dueno || '';
+  g('ec-tel').value    = CLUB_ACTIVO.telefono || '';
   openModal('m-edit-club');
 }
 
 async function enviarEditarClub(){
   if(!CLUB_ACTIVO) return;
-  if(!g('ec-nomb').value.trim()||!g('ec-apel').value.trim()||!g('ec-ced').value.trim()){
-    toast('⚠️ Nombres, apellidos y cédula son obligatorios.','err'); return;
+  if(!g('ec-nomb').value.trim()||!g('ec-apel').value.trim()||!g('ec-ced').value.trim()||!g('ec-tel').value.trim()){
+    toast('⚠️ Nombres, apellidos, cédula y contacto son obligatorios.','err'); return;
   }
   const btn=g('btn-edit-club'); btn.disabled=true; btn.textContent='Guardando...';
   try{
@@ -815,7 +818,8 @@ async function enviarEditarClub(){
         estado:       g('ec-estado').value,
         nombres_dueno:  g('ec-nomb').value.trim(),
         apellidos_dueno:g('ec-apel').value.trim(),
-        cedula_dueno:   g('ec-ced').value.trim()
+        cedula_dueno:   g('ec-ced').value.trim(),
+        telefono:       g('ec-tel').value.trim()
       })
     });
     const res=await r.json();
@@ -828,9 +832,10 @@ async function enviarEditarClub(){
         estado:g('ec-estado').value,
         nombres_dueno:g('ec-nomb').value.trim(),
         apellidos_dueno:g('ec-apel').value.trim(),
-        cedula_dueno:g('ec-ced').value.trim()
+        cedula_dueno:g('ec-ced').value.trim(),
+        telefono:g('ec-tel').value.trim()
       };
-      g('ch-meta').textContent=`📍 ${CLUB_ACTIVO.ciudad||'—'}  ·  👤 ${CLUB_ACTIVO.nombres_dueno} ${CLUB_ACTIVO.apellidos_dueno}`;
+      g('ch-meta').textContent=`📍 ${CLUB_ACTIVO.ciudad||'—'}  ·  👤 ${CLUB_ACTIVO.nombres_dueno} ${CLUB_ACTIVO.apellidos_dueno}  ·  📞 ${CLUB_ACTIVO.telefono||'—'}`;
       // Actualizar en la lista local
       const idx=CLUBS.findIndex(c=>c.id===CLUB_ACTIVO.id);
       if(idx>-1) CLUBS[idx]={...CLUBS[idx],...CLUB_ACTIVO};
