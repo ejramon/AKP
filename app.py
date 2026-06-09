@@ -106,7 +106,9 @@ def get_clubs():
 def crear_club():
     d = request.get_json(force=True) or {}
     req=["nombre","nombres_dueno","apellidos_dueno","cedula_dueno","telefono"]
-    vacios=[c for c in req if not str(d.get(c,"")).strip()]
+    etiquetas={"nombre":"nombre","nombres_dueno":"nombres","apellidos_dueno":"apellidos",
+               "cedula_dueno":"cédula","telefono":"contacto"}
+    vacios=[etiquetas.get(c,c) for c in req if not str(d.get(c,"")).strip()]
     if vacios: return jsonify({"error":f"Faltan: {', '.join(vacios)}"}), 400
     conn = None
     try:
@@ -141,7 +143,9 @@ def crear_club():
 def editar_club(club_id):
     d = request.get_json(force=True) or {}
     req = ["nombres_dueno","apellidos_dueno","cedula_dueno","telefono"]
-    vacios = [c for c in req if not str(d.get(c,"")).strip()]
+    etiquetas={"nombres_dueno":"nombres","apellidos_dueno":"apellidos",
+               "cedula_dueno":"cédula","telefono":"contacto"}
+    vacios = [etiquetas.get(c,c) for c in req if not str(d.get(c,"")).strip()]
     if vacios: return jsonify({"error":f"Faltan: {', '.join(vacios)}"}), 400
     conn = None
     try:
