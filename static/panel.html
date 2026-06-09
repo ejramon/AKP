@@ -264,6 +264,7 @@ header{background:var(--p);padding:12px 20px;display:flex;align-items:center;gap
         <div class="f"><label>Apellidos Responsable *</label><input id="ec-apel"></div>
         <div class="f"><label>Cédula Responsable *</label><input id="ec-ced" inputmode="numeric" maxlength="20"></div>
         <div class="f"><label>Contacto (Teléfono) *</label><input id="ec-tel" inputmode="tel" placeholder="Ej: 0991234567"></div>
+        <div class="f full"><label>Dirección *</label><input id="ec-dir" placeholder="Ej: Av. Amazonas y Naciones Unidas"></div>
       </div>
     </div>
     <div class="mfoot">
@@ -290,6 +291,7 @@ header{background:var(--p);padding:12px 20px;display:flex;align-items:center;gap
         <div class="f"><label>Apellidos Responsable *</label><input id="c-apel"></div>
         <div class="f"><label>Cédula Responsable *</label><input id="c-ced" inputmode="numeric" maxlength="20"></div>
         <div class="f"><label>Contacto (Teléfono) *</label><input id="c-tel" inputmode="tel" placeholder="Ej: 0991234567"></div>
+        <div class="f full"><label>Dirección *</label><input id="c-dir" placeholder="Ej: Av. Amazonas y Naciones Unidas"></div>
       </div>
     </div>
     <div class="mfoot">
@@ -631,12 +633,12 @@ async function enviarHistorial(){
 }
 
 async function enviarClub(){
-  if(!v('c-nombre')||!v('c-nomb')||!v('c-apel')||!v('c-ced')||!v('c-tel')){toast('⚠️ Completa los campos obligatorios.','err');return;}
+  if(!v('c-nombre')||!v('c-nomb')||!v('c-apel')||!v('c-ced')||!v('c-tel')||!v('c-dir')){toast('⚠️ Completa los campos obligatorios.','err');return;}
   const btn=g('btn-club');btn.disabled=true;btn.textContent='Guardando...';
   try{
     const r=await fetch('/api/clubs',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({nombre:v('c-nombre'),ciudad:v('c-ciudad'),estado:v('c-estado'),
-        nombres_dueno:v('c-nomb'),apellidos_dueno:v('c-apel'),cedula_dueno:v('c-ced'),telefono:v('c-tel')})});
+        nombres_dueno:v('c-nomb'),apellidos_dueno:v('c-apel'),cedula_dueno:v('c-ced'),telefono:v('c-tel'),direccion:v('c-dir')})});
     const res=await r.json();
     if(r.ok){
       CLUBS=res.clubs||[];
@@ -826,13 +828,14 @@ function openEditarClub(){
   g('ec-apel').value   = CLUB_ACTIVO.apellidos_dueno || '';
   g('ec-ced').value    = CLUB_ACTIVO.cedula_dueno || '';
   g('ec-tel').value    = CLUB_ACTIVO.telefono || '';
+  g('ec-dir').value    = CLUB_ACTIVO.direccion || '';
   openModal('m-edit-club');
 }
 
 async function enviarEditarClub(){
   if(!CLUB_ACTIVO) return;
-  if(!g('ec-nomb').value.trim()||!g('ec-apel').value.trim()||!g('ec-ced').value.trim()||!g('ec-tel').value.trim()){
-    toast('⚠️ Nombres, apellidos, cédula y contacto son obligatorios.','err'); return;
+  if(!g('ec-nomb').value.trim()||!g('ec-apel').value.trim()||!g('ec-ced').value.trim()||!g('ec-tel').value.trim()||!g('ec-dir').value.trim()){
+    toast('⚠️ Nombres, apellidos, cédula, contacto y dirección son obligatorios.','err'); return;
   }
   const btn=g('btn-edit-club'); btn.disabled=true; btn.textContent='Guardando...';
   try{
@@ -845,7 +848,8 @@ async function enviarEditarClub(){
         nombres_dueno:  g('ec-nomb').value.trim(),
         apellidos_dueno:g('ec-apel').value.trim(),
         cedula_dueno:   g('ec-ced').value.trim(),
-        telefono:       g('ec-tel').value.trim()
+        telefono:       g('ec-tel').value.trim(),
+        direccion:      g('ec-dir').value.trim()
       })
     });
     const res=await r.json();
@@ -859,7 +863,8 @@ async function enviarEditarClub(){
         nombres_dueno:g('ec-nomb').value.trim(),
         apellidos_dueno:g('ec-apel').value.trim(),
         cedula_dueno:g('ec-ced').value.trim(),
-        telefono:g('ec-tel').value.trim()
+        telefono:g('ec-tel').value.trim(),
+        direccion:g('ec-dir').value.trim()
       };
       g('ch-meta').textContent=`📍 ${CLUB_ACTIVO.ciudad||'—'}  ·  👤 ${CLUB_ACTIVO.nombres_dueno} ${CLUB_ACTIVO.apellidos_dueno}  ·  📞 ${CLUB_ACTIVO.telefono||'—'}`;
       // Actualizar en la lista local
