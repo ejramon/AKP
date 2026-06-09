@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AKP — Registra tu Club</title>
+<title>IKA — Registra tu Club</title>
 <style>
 :root{--p:#1A3A6B;--pd:#0F2347;--a:#2563EB;--t:#1E293B;--ts:#64748B;--b:#CBD5E1;--f:#F0F4F8;--s:#fff;--ok:#16A34A;--err:#DC2626}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -42,8 +42,8 @@ header{background:var(--p);padding:12px 20px;display:flex;align-items:center;gap
 <header>
   <div style="font-size:1.4rem">🥋</div>
   <div>
-    <div style="font-size:1rem;font-weight:700">AKP — Portal</div>
-    <div style="font-size:.72rem;opacity:.65">Asociación de Karate Profesional</div>
+    <div style="font-size:1rem;font-weight:700">IKA — Portal</div>
+    <div style="font-size:.72rem;opacity:.65">International Karate Association</div>
   </div>
 </header>
 
@@ -114,7 +114,7 @@ async function registrarClub(){
     const res=await r.json();
     if(r.ok){
       LINK_GENERADO=`${location.origin}/panel?club=${res.token}`;
-      const waMsg=encodeURIComponent(`🥋 Hola! Aquí está tu link de acceso al portal AKP:\n${LINK_GENERADO}`);
+      const waMsg=encodeURIComponent(`🥋 Hola! Aquí está tu link de acceso al portal IKA:\n${LINK_GENERADO}`);
       g('res-nombre').textContent=v('c-nombre');
       g('res-link').textContent=LINK_GENERADO;
       g('btn-wa').href=`https://wa.me/?text=${waMsg}`;
