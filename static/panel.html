@@ -211,6 +211,12 @@ header{background:var(--p);padding:12px 20px;display:flex;align-items:center;gap
       <div class="club-hero-icon">📅</div>
       <div><h2 id="asist-club-nombre">—</h2><p id="asist-club-meta">Control de Asistencia</p></div>
     </div>
+    <div class="f" style="max-width:340px;margin-bottom:16px">
+      <label>Filtrar por categoría</label>
+      <select id="asist-cat" onchange="cambiarCategoriaAsist()">
+        <option value="">Todas las categorías</option>
+      </select>
+    </div>
     <div class="asist-layout">
       <!-- Calendario -->
       <div class="cal-wrap">
@@ -657,7 +663,7 @@ async function enviarClub(){
 }
 
 // ── Asistencia ──────────────────────────────────────────────────────────────
-let ASIST_CLUB=null, ASIST_AFILIADOS=[], ASIST_RESUMEN={}, ASIST_DIA=null, ASIST_DIA_DATA={};
+let ASIST_CLUB=null, ASIST_AFILIADOS=[], ASIST_RESUMEN={}, ASIST_DIA=null, ASIST_DIA_DATA={}, ASIST_CATEGORIA='';
 let CAL_YEAR=new Date().getFullYear(), CAL_MONTH=new Date().getMonth();
 const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const DIAS_SHORT=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
@@ -665,7 +671,7 @@ const DIAS_SHORT=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 async function abrirAsistencia(club_id){
   ASIST_CLUB=CLUBS.find(c=>c.id===club_id);
   if(!ASIST_CLUB)return;
-  ASIST_DIA=null; ASIST_DIA_DATA={};
+  ASIST_DIA=null; ASIST_DIA_DATA={}; ASIST_CATEGORIA='';
   CAL_YEAR=new Date().getFullYear(); CAL_MONTH=new Date().getMonth();
   g('asist-club-nombre').textContent=ASIST_CLUB.nombre;
   g('asist-club-meta').textContent=`📍 ${ASIST_CLUB.ciudad||'—'} · Control de Asistencia`;
@@ -680,7 +686,18 @@ async function abrirAsistencia(club_id){
   ]);
   if(ra.ok) ASIST_AFILIADOS=await ra.json(); else ASIST_AFILIADOS=[];
   if(rr.ok) ASIST_RESUMEN=await rr.json(); else ASIST_RESUMEN={};
+  // Poblar el selector de categorías con las categorías reales de los afiliados del club
+  const cats=[...new Set(ASIST_AFILIADOS.map(a=>a.categoria).filter(Boolean))].sort();
+  const selCat=g('asist-cat');
+  selCat.innerHTML='<option value="">Todas las categorías</option>';
+  cats.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;selCat.appendChild(o);});
   renderCal();
+}
+
+function cambiarCategoriaAsist(){
+  ASIST_CATEGORIA=g('asist-cat').value;
+  // Si ya hay un día seleccionado, re-renderizar la lista filtrada (sin volver a la API)
+  if(ASIST_DIA) renderListaAsistencia(ASIST_DIA);
 }
 
 function calPrev(){CAL_MONTH--;if(CAL_MONTH<0){CAL_MONTH=11;CAL_YEAR--;}renderCal();}
@@ -723,20 +740,28 @@ async function selDia(dateStr){
 
 function renderListaAsistencia(dateStr){
   const lista=g('asist-lista');
+  // Filtrar por categoría seleccionada (vacío = todas)
+  const afiliados=ASIST_CATEGORIA
+    ? ASIST_AFILIADOS.filter(a=>a.categoria===ASIST_CATEGORIA)
+    : ASIST_AFILIADOS;
   if(!ASIST_AFILIADOS.length){
     lista.innerHTML='<div class="asist-fecha-hdr">'+esc(dateStr)+'</div><div class="asist-placeholder">No hay afiliados en este club.</div>';
     return;
   }
   const [y,m,d]=dateStr.split('-');
   const fechaLegible=`${d}/${m}/${y}`;
+  if(!afiliados.length){
+    lista.innerHTML=`<div class="asist-fecha-hdr">📅 ${fechaLegible}</div><div class="asist-placeholder">No hay afiliados en la categoría "${esc(ASIST_CATEGORIA)}".</div>`;
+    return;
+  }
   let presentes=0,ausentes=0,sinReg=0;
-  ASIST_AFILIADOS.forEach(a=>{
+  afiliados.forEach(a=>{
     const est=ASIST_DIA_DATA[String(a.id)]||'sin_registro';
     if(est==='presente')presentes++;
     else if(est==='ausente')ausentes++;
     else sinReg++;
   });
-  const rows=ASIST_AFILIADOS.map(a=>{
+  const rows=afiliados.map(a=>{
     const sid=String(a.id);
     const est=ASIST_DIA_DATA[sid]||'sin_registro';
     return `<div class="asist-row" id="ar-${a.id}">
@@ -751,8 +776,9 @@ function renderListaAsistencia(dateStr){
       </div>
     </div>`;
   }).join('');
+  const catLabel=ASIST_CATEGORIA?` · 🏷️ ${esc(ASIST_CATEGORIA)}`:'';
   lista.innerHTML=`
-    <div class="asist-fecha-hdr">📅 ${fechaLegible}</div>
+    <div class="asist-fecha-hdr">📅 ${fechaLegible}${catLabel}</div>
     ${rows}
     <div class="asist-footer">
       <div class="asist-resumen">✅ ${presentes} presentes · ❌ ${ausentes} ausentes · ⬜ ${sinReg} sin registro</div>
